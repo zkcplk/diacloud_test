@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DIACloud API Test Paneli</title>
+  <meta name="description" content="DIACloud REST API için tek dosyalık test paneli" />
+  <style>
+    :root{
+      --bg:#0b1020;--panel:#11182b;--panel2:#151f36;--line:#263451;
+      --text:#eaf0ff;--muted:#9fb0cf;--blue:#62a8ff;--green:#45d19a;
+      --yellow:#ffcf5a;--red:#ff6b78;--shadow:0 18px 50px rgba(0,0,0,.28)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#09101d,#0b1020 35%,#0a0f1c);
+      color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    button,input,select,textarea{font:inherit}
+    .wrap{max-width:1400px;margin:auto;padding:24px}
+    .header{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+    h1{font-size:25px;margin:0 0 5px}.sub{color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);
+      background:#10182a;border-radius:999px;padding:7px 11px;color:#cbd8f1;font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+    .grid{display:grid;grid-template-columns:330px 1fr;gap:18px}
+    .card{background:rgba(17,24,43,.96);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+    .side{padding:15px;position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto}
+    .main{padding:20px}
+    .section-title{font-weight:700;margin:2px 0 10px;color:#dce7fb}
+    .endpoint-list{display:flex;flex-direction:column;gap:7px}
+    .ep{width:100%;text-align:left;border:1px solid transparent;border-radius:10px;padding:10px 11px;
+      background:#0e1628;color:#dce7fb;cursor:pointer;transition:.15s}
+    .ep:hover{border-color:#344666}.ep.active{background:#172540;border-color:#4773aa}
+    .method{display:inline-block;min-width:47px;font-weight:800;font-size:11px}
+    .GET{color:var(--green)}.PUT{color:var(--yellow)}.DELETE{color:var(--red)}
+    .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+    .note-mini{color:var(--muted);font-size:11px;margin-top:3px}
+    hr{border:0;border-top:1px solid var(--line);margin:15px 0}
+    label{display:block;font-size:12px;color:#b7c6df;margin:0 0 5px}
+    input,select,textarea{width:100%;color:var(--text);background:#0a1221;border:1px solid #2c3b59;border-radius:9px;
+      padding:10px 11px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#5e91d0;box-shadow:0 0 0 3px rgba(98,168,255,.12)}
+    textarea{min-height:120px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .row{display:flex;gap:10px;align-items:end}.row>*{flex:1}
+    .authbox{background:#0d1628;border:1px solid #263755;padding:14px;border-radius:12px;margin-bottom:15px}
+    .request-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .big-method{font-weight:900;padding:7px 10px;border-radius:8px;background:#0b1425;border:1px solid var(--line)}
+    .url-preview{flex:1;min-width:260px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      color:#c8d9f6;background:#09111f;border:1px solid #23334f;padding:9px 11px;border-radius:8px;word-break:break-all}
+    .btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}
+    .btn-primary{background:#4e91e8;color:white}.btn-primary:hover{filter:brightness(1.08)}
+    .btn-secondary{background:#192841;color:#dce7fb;border:1px solid #324667}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .actions{display:flex;gap:9px;justify-content:flex-end;margin:15px 0}
+    .help{border:1px solid #3f4a63;background:#121a2b;border-radius:11px;padding:12px 13px;color:#b8c6df;margin:13px 0}
+    .help strong{color:#f0f5ff}.warning{border-color:#6b5831;background:#1c1a13;color:#ead8a4}
+    .result-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 9px}
+    .pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:12px;color:#c7d4ea}
+    .pill.ok{border-color:#286749;color:#73e3b5}.pill.err{border-color:#793b46;color:#ff939d}
+    pre{margin:0;background:#080e19;border:1px solid #23304a;border-radius:12px;padding:14px;overflow:auto;
+      min-height:230px;max-height:560px;color:#dce8ff;white-space:pre-wrap;word-break:break-word;
+      font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .hidden{display:none!important}.muted{color:var(--muted)}
+    details{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#0d1525}
+    summary{cursor:pointer;font-weight:700;color:#cbd8ed}
+    .footer{color:#7f91b2;font-size:12px;text-align:center;padding:20px 0 4px}
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}.side{position:static;max-height:none}.form-grid,.form-grid.three{grid-template-columns:1fr}
+      .header{flex-direction:column}.wrap{padding:12px}.main{padding:14px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <h1>DIACloud API Test Paneli</h1>
+      <div class="sub">Tek dosya • GitHub Pages uyumlu • GET / PUT / DELETE</div>
+    </div>
+    <div class="badge"><span class="dot"></span> Base URL: api.diacloudsolutions.com.cn</div>
+  </div>
+
+  <div class="grid">
+    <aside class="card side">
+      <div class="section-title">REST endpoint'leri</div>
+      <div id="endpointList" class="endpoint-list"></div>
+      <hr>
+      <button class="ep" id="customBtn">
+        <span class="method">ÖZEL</span>
+        <span class="path">Custom request</span>
+        <div class="note-mini">İstediğin URL ve metodu elle gir</div>
+      </button>
+      <hr>
+      <div class="note-mini">
+        Not: DIACloud V1.4 dokümanında hesap başına API çağrı limiti saatte 10.000 olarak belirtilmiştir.
+      </div>
+    </aside>
+
+    <main class="card main">
+      <div class="authbox">
+        <div class="section-title">Kimlik doğrulama</div>
+        <div class="form-grid">
+          <div>
+            <label for="username">DIACloud kullanıcı adı</label>
+            <input id="username" autocomplete="username" placeholder="kullanici@example.com">
+          </div>
+          <div>
+            <label for="password">DIACloud şifre</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:10px">
+          <div>
+            <label for="authHeader">Auth header</label>
+            <select id="authHeader">
+              <option value="Authorization">Authorization: Basic … (önerilen)</option>
+              <option value="authoriz">authoriz: Basic … (dokümandaki adla dene)</option>
+            </select>
+          </div>
+          <div>
+            <label for="baseUrl">Base URL</label>
+            <input id="baseUrl" value="https://api.diacloudsolutions.com.cn">
+          </div>
+        </div>
+        <div class="note-mini" style="margin-top:8px">Şifre localStorage'a kaydedilmez. Sayfa yenilenince yeniden girmen gerekir.</div>
+      </div>
+
+      <div class="request-head">
+        <span id="methodBadge" class="big-method GET">GET</span>
+        <div id="urlPreview" class="url-preview"></div>
+      </div>
+
+      <div id="presetFields">
+        <div class="form-grid">
+          <div id="deviceField" class="hidden">
+            <label for="deviceId">device_id</label>
+            <input id="deviceId" placeholder="örn. 21907">
+          </div>
+          <div id="regField" class="hidden">
+            <label for="regAddr">reg_addr</label>
+            <input id="regAddr" placeholder="örn. 2048">
+          </div>
+        </div>
+
+        <div id="querySection" class="hidden" style="margin-top:12px">
+          <div class="section-title">Query parametreleri</div>
+          <div class="form-grid three">
+            <div id="qStartWrap" class="hidden"><label for="qStart">start</label><input id="qStart" placeholder="örn. 1536"></div>
+            <div id="qRegsWrap" class="hidden"><label for="qRegs">regs</label><input id="qRegs" placeholder="örn. 2048,2050"></div>
+            <div id="qPageWrap" class="hidden"><label for="qPage">page</label><input id="qPage" placeholder="örn. 2"></div>
+            <div id="qLimitWrap" class="hidden"><label for="qLimit">limit</label><input id="qLimit" placeholder="örn. 100"></div>
+            <div id="qFromWrap" class="hidden"><label for="qFrom">from (UTC)</label><input id="qFrom" placeholder="2020-06-16 00:00:00"></div>
+            <div id="qToWrap" class="hidden"><label for="qTo">to (UTC)</label><input id="qTo" placeholder="2020-06-17 00:00:00"></div>
+            <div id="qGapWrap" class="hidden"><label for="qGap">gap (saniye)</label><input id="qGap" placeholder="örn. 90"></div>
+          </div>
+        </div>
+
+        <div id="bodySection" class="hidden" style="margin-top:12px">
+          <div class="section-title">JSON request body</div>
+          <textarea id="bodyInput">[
+  {"addr": 2048, "value": 100},
+  {"addr": 2049, "value": 100}
+]</textarea>
+        </div>
+      </div>
+
+      <div id="customFields" class="hidden">
+        <div class="form-grid">
+          <div>
+            <label for="customMethod">HTTP metodu</label>
+            <select id="customMethod">
+              <option>GET</option><option>PUT</option><option>POST</option>
+              <option>PATCH</option><option>DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label for="customUrl">Tam URL veya /path</label>
+            <input id="customUrl" placeholder="/devices">
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <label for="customBody">Body (GET/DELETE için boş bırakılabilir)</label>
+          <textarea id="customBody" placeholder='{"key":"value"}'></textarea>
+        </div>
+      </div>
+
+      <div id="endpointHelp" class="help"></div>
+      <div class="help warning">
+        <strong>GitHub Pages notu:</strong> Bu sayfa tarayıcıdan DIACloud'a doğrudan istek yollar.
+        API sunucusu CORS kapsamında GitHub Pages origin'ine ve <code>Authorization</code> header'ına izin vermiyorsa
+        tarayıcı isteği engeller. Böyle bir durumda sadece HTML/JS ile bunu güvenli biçimde aşmak mümkün değildir;
+        küçük bir serverless proxy gerekir. Kullanıcı adı/şifreyi herkese açık kaynak koduna kesinlikle yazma.
+      </div>
+
+      <div class="actions">
+        <button id="copyUrlBtn" class="btn btn-secondary">URL'yi kopyala</button>
+        <button id="sendBtn" class="btn btn-primary">İsteği gönder</button>
+      </div>
+
+      <div class="result-head">
+        <strong>Yanıt</strong>
+        <span id="statusPill" class="pill">Henüz istek yok</span>
+        <span id="timePill" class="pill">— ms</span>
+      </div>
+      <pre id="result">Bir endpoint seçip kullanıcı adı / şifreni girdikten sonra "İsteği gönder" düğmesine bas.</pre>
+
+      <details>
+        <summary>Son request bilgileri</summary>
+        <pre id="requestDebug" style="min-height:110px;max-height:260px;margin-top:10px">—</pre>
+      </details>
+    </main>
+  </div>
+
+  <div class="footer">DIACloud API için bağımsız test arayüzü. Şifre hiçbir zaman dosyanın içine gömülmemelidir.</div>
+</div>
+
+<script>
+const endpoints = [
+  {id:'devices', method:'GET', path:'/devices', title:'Cihazları listele',
+   help:'Hesap altındaki cihazların temel bilgilerini getirir.'},
+  {id:'alarms', method:'GET', path:'/alarms', title:'Tüm alarmlar (UTC+8)',
+   query:['page','limit','from','to'], help:'Tüm cihaz alarmlarını getirir. Sayfalama ve zaman filtresi kullanılabilir.'},
+  {id:'deviceAlarms', method:'GET', path:'/devices/{device_id}/alarms', title:'Cihaz alarmları (UTC+8)',
+   device:true, query:['page','limit','from','to'], help:'Belirli bir cihazın alarm kayıtlarını getirir.'},
+  {id:'vlns', method:'GET', path:'/vlns', title:'Güvenli tüneller',
+   help:'Hesaptaki secure tunnel / VLN bilgilerini getirir.'},
+  {id:'regs', method:'GET', path:'/devices/{device_id}/regs', title:'Register değerleri (UTC+8)',
+   device:true, query:['start'], help:'Cihazın güncel register değerlerini getirir. M alanı için start=1536 kullanılabilir; varsayılan başlangıç 2048 olarak dokümante edilmiştir.'},
+  {id:'putRegs', method:'PUT', path:'/devices/{device_id}/regs', title:'Register değeri yaz',
+   device:true, body:true, help:'Bir veya birden çok register değerini yazar. Başarılı işlem için dokümanda HTTP 202 örneği verilmiştir.'},
+  {id:'regshistory', method:'GET', path:'/devices/{device_id}/regshistory', title:'Çoklu register geçmişi',
+   device:true, query:['regs','page','limit','from','to','gap'], help:'Register konfigürasyonuna göre çoklu geçmiş verisi getirir. regs zorunludur (örn. 2048,2050).'},
+  {id:'regHistory', method:'GET', path:'/devices/{device_id}/regs/{reg_addr}/history', title:'Tek register geçmişi',
+   device:true, reg:true, query:['page','limit','from','to','gap'], help:'Tek bir register adresinin geçmiş değerlerini getirir.'},
+  {id:'deleteReg', method:'DELETE', path:'/devices/{device_id}/regs/{reg_addr}', title:'Register sil',
+   device:true, reg:true, help:'DİKKAT: V1.4 dokümanı bu endpoint için "not yet open" bilgisini veriyor. Sunucuda kapalı olabilir.'},
+  {id:'v2alarms', method:'GET', path:'/v2/alarms', title:'Tüm alarmlar (UTC)',
+   query:['page','limit','from','to'], help:'v2 alarm endpoint’i. Zaman alanları UTC (0 saat dilimi) olarak döner.'},
+  {id:'v2deviceAlarms', method:'GET', path:'/v2/devices/{device_id}/alarms', title:'Cihaz alarmları (UTC)',
+   device:true, query:['page','limit','from','to'], help:'Belirli cihazın v2/UTC alarm kayıtlarını getirir.'},
+  {id:'v2regs', method:'GET', path:'/v2/devices/{device_id}/regs', title:'Register değerleri (UTC)',
+   device:true, query:['start'], help:'Cihazın güncel register değerlerini UTC zaman bilgisiyle getirir.'}
+];
+
+let current = endpoints[0];
+let customMode = false;
+const $ = id => document.getElementById(id);
+
+function renderEndpoints(){
+  const list = $('endpointList');
+  list.innerHTML = '';
+  endpoints.forEach(ep => {
+    const b = document.createElement('button');
+    b.className = 'ep' + (ep.id === current.id && !customMode ? ' active':'');
+    b.innerHTML = `<span class="method ${ep.method}">${ep.method}</span>
+      <span class="path">${ep.path}</span><div class="note-mini">${ep.title}</div>`;
+    b.onclick = () => { current = ep; customMode=false; renderEndpoints(); $('customBtn').classList.remove('active'); applyEndpoint(); };
+    list.appendChild(b);
+  });
+}
+
+$('customBtn').onclick = () => {
+  customMode = true; renderEndpoints(); $('customBtn').classList.add('active');
+  $('presetFields').classList.add('hidden'); $('customFields').classList.remove('hidden');
+  $('endpointHelp').innerHTML = '<strong>Özel request:</strong> Tam bir URL veya DIACloud base URL altındaki <code>/path</code> değerini girebilirsin.';
+  updatePreview();
+};
+
+function applyEndpoint(){
+  $('presetFields').classList.remove('hidden'); $('customFields').classList.add('hidden');
+  $('deviceField').classList.toggle('hidden', !current.device);
+  $('regField').classList.toggle('hidden', !current.reg);
+  $('bodySection').classList.toggle('hidden', !current.body);
+  const q = current.query || [];
+  $('querySection').classList.toggle('hidden', q.length === 0);
+  ['start','regs','page','limit','from','to','gap'].forEach(k=>{
+    const map = {start:'qStartWrap',regs:'qRegsWrap',page:'qPageWrap',limit:'qLimitWrap',from:'qFromWrap',to:'qToWrap',gap:'qGapWrap'};
+    $(map[k]).classList.toggle('hidden', !q.includes(k));
+  });
+  $('endpointHelp').innerHTML = `<strong>${current.title}:</strong> ${current.help}`;
+  updatePreview();
+}
+
+function base(){
+  return $('baseUrl').value.trim().replace(/\/+$/,'');
+}
+
+function buildPresetUrl(){
+  let path = current.path;
+  if(current.device) path = path.replace('{device_id}', encodeURIComponent($('deviceId').value.trim() || '{device_id}'));
+  if(current.reg) path = path.replace('{reg_addr}', encodeURIComponent($('regAddr').value.trim() || '{reg_addr}'));
+  const vals = {
+    start:$('qStart').value.trim(), regs:$('qRegs').value.trim(), page:$('qPage').value.trim(),
+    limit:$('qLimit').value.trim(), from:$('qFrom').value.trim(), to:$('qTo').value.trim(), gap:$('qGap').value.trim()
+  };
+  const params = new URLSearchParams();
+  (current.query || []).forEach(k => { if(vals[k]) params.set(k, vals[k]); });
+  return base() + path + (params.toString() ? '?' + params.toString() : '');
+}
+
+function buildCustomUrl(){
+  const raw = $('customUrl').value.trim();
+  if(!raw) return base();
+  if(/^https?:\/\//i.test(raw)) return raw;
+  return base() + (raw.startsWith('/') ? raw : '/' + raw);
+}
+
+function currentMethod(){ return customMode ? $('customMethod').value : current.method; }
+function currentUrl(){ return customMode ? buildCustomUrl() : buildPresetUrl(); }
+
+function updatePreview(){
+  const m = currentMethod();
+  $('methodBadge').textContent = m;
+  $('methodBadge').className = 'big-method ' + m;
+  $('urlPreview').textContent = currentUrl();
+}
+
+function basicToken(user, pass){
+  // UTF-8 safe Base64
+  const bytes = new TextEncoder().encode(user + ':' + pass);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function prettyText(text){
+  if(!text) return '(boş yanıt)';
+  try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
+}
+
+function validate(){
+  if(!$('username').value.trim()) throw new Error('Kullanıcı adı boş.');
+  if(!$('password').value) throw new Error('Şifre boş.');
+  if(!customMode && current.device && !$('deviceId').value.trim()) throw new Error('device_id gerekli.');
+  if(!customMode && current.reg && !$('regAddr').value.trim()) throw new Error('reg_addr gerekli.');
+  if(!customMode && current.id === 'regshistory' && !$('qRegs').value.trim()) throw new Error('regs parametresi gerekli (örn. 2048,2050).');
+  const m = currentMethod();
+  if(['PUT','POST','PATCH'].includes(m)){
+    const txt = customMode ? $('customBody').value.trim() : $('bodyInput').value.trim();
+    if(txt){
+      try { JSON.parse(txt); } catch { throw new Error('Request body geçerli JSON değil.'); }
+    }
+  }
+}
+
+async function sendRequest(){
+  const btn = $('sendBtn');
+  const result = $('result');
+  const status = $('statusPill');
+  try{
+    validate();
+    btn.disabled = true; btn.textContent = 'Gönderiliyor…';
+    status.className='pill'; status.textContent='İstek gönderiliyor';
+    $('timePill').textContent='— ms';
+    result.textContent='Bekleniyor…';
+
+    const method = currentMethod();
+    const url = currentUrl();
+    const headers = {
+      'Accept':'application/json',
+      [$('authHeader').value]: 'Basic ' + basicToken($('username').value.trim(), $('password').value)
+    };
+    const options = {method, headers, mode:'cors', cache:'no-store'};
+    let bodyText = '';
+
+    if(['PUT','POST','PATCH'].includes(method)){
+      bodyText = customMode ? $('customBody').value.trim() : $('bodyInput').value.trim();
+      if(bodyText){
+        headers['Content-Type']='application/json';
+        options.body=bodyText;
+      }
+    }
+
+    $('requestDebug').textContent =
+      `${method} ${url}\n` +
+      `Accept: application/json\n` +
+      `${$('authHeader').value}: Basic [gizlendi]\n` +
+      (bodyText ? `Content-Type: application/json\n\n${prettyText(bodyText)}` : '');
+
+    const t0 = performance.now();
+    const response = await fetch(url, options);
+    const elapsed = Math.round(performance.now() - t0);
+    const text = await response.text();
+
+    $('timePill').textContent = elapsed + ' ms';
+    status.textContent = `${response.status} ${response.statusText || ''}`.trim();
+    status.className = 'pill ' + (response.ok ? 'ok' : 'err');
+
+    const headerLines = [];
+    response.headers.forEach((v,k)=>headerLines.push(`${k}: ${v}`));
+    result.textContent = prettyText(text);
+    $('requestDebug').textContent += `\n\n--- RESPONSE HEADERS ---\n${headerLines.join('\n') || '(tarayıcı tarafından görünür header yok)'}`;
+  }catch(err){
+    status.textContent = 'İstek başarısız';
+    status.className = 'pill err';
+    result.textContent =
+      `Hata: ${err.message}\n\n` +
+      `Eğer tarayıcı konsolunda "CORS", "preflight" veya "Access-Control-Allow-Origin" hatası görüyorsan, ` +
+      `sorun JavaScript kodundan değil API sunucusunun CORS politikasındandır. GitHub Pages üzerinde doğrudan çağrı için sunucunun izin vermesi gerekir.`;
+  }finally{
+    btn.disabled=false; btn.textContent='İsteği gönder';
+  }
+}
+
+$('sendBtn').onclick = sendRequest;
+$('copyUrlBtn').onclick = async () => {
+  try{
+    await navigator.clipboard.writeText(currentUrl());
+    $('copyUrlBtn').textContent='Kopyalandı';
+    setTimeout(()=>$('copyUrlBtn').textContent="URL'yi kopyala",1200);
+  }catch{
+    alert('Kopyalanamadı: ' + currentUrl());
+  }
+};
+
+[
+  'baseUrl','deviceId','regAddr','qStart','qRegs','qPage','qLimit','qFrom','qTo','qGap',
+  'customMethod','customUrl'
+].forEach(id => $(id).addEventListener('input', updatePreview));
+$('customMethod').addEventListener('change', updatePreview);
+
+renderEndpoints();
+applyEndpoint();
+</script>
+</body>
+</html>
