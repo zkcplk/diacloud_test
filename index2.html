@@ -14,6 +14,7 @@
   --green:#14966f;
   --red:#d94c5c;
   --blue:#2f6fed;
+  --amber:#b7791f;
   --shadow:0 8px 24px rgba(20,31,52,.06);
 }
 *{box-sizing:border-box}
@@ -23,7 +24,7 @@ body{
   color:var(--text);
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
-button,input,select{font:inherit}
+button,input{font:inherit}
 .wrap{max-width:1180px;margin:auto;padding:28px 18px 48px}
 .header{
   display:flex;
@@ -41,10 +42,7 @@ h1{margin:0;font-size:28px;letter-spacing:-.03em}
   border-radius:16px;
   box-shadow:var(--shadow);
 }
-.login{
-  padding:16px;
-  margin-bottom:18px;
-}
+.login{padding:16px;margin-bottom:18px}
 .login-grid{
   display:grid;
   grid-template-columns:1fr 1fr 1fr auto;
@@ -58,7 +56,7 @@ label{
   color:var(--muted);
   margin-bottom:5px;
 }
-input,select{
+input{
   width:100%;
   border:1px solid #d9e0ea;
   background:#fff;
@@ -67,6 +65,7 @@ input,select{
   border-radius:9px;
   outline:none;
 }
+input:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,237,.08)}
 .auth-label{
   width:100%;
   border:1px solid #d9e0ea;
@@ -76,7 +75,6 @@ input,select{
   border-radius:9px;
   font-weight:750;
 }
-input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,237,.08)}
 .btn{
   border:0;
   border-radius:9px;
@@ -86,6 +84,7 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
 }
 .btn-primary{background:var(--blue);color:white}
 .btn-light{background:#edf2f8;color:#334155}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .summary{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -104,16 +103,13 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
 }
 .controls h2{margin:0;font-size:18px}
 .controls-right{display:flex;gap:8px;align-items:center}
-.search{max-width:260px}
+.search{max-width:300px}
 .devices{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:12px;
 }
-.device{
-  padding:18px;
-  min-height:180px;
-}
+.device{padding:18px}
 .device-head{
   display:flex;
   justify-content:space-between;
@@ -158,6 +154,67 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.register-section{
+  margin-top:16px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.register-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:13px;
+  font-weight:850;
+  margin-bottom:7px;
+}
+.register-count{
+  color:var(--muted);
+  font-weight:650;
+  font-size:11px;
+}
+.register-list{
+  border:1px solid #e8edf4;
+  border-radius:11px;
+  overflow:hidden;
+  background:#fff;
+}
+.reg-row{
+  display:grid;
+  grid-template-columns:minmax(90px,1fr) minmax(70px,.75fr) minmax(120px,1.15fr);
+  align-items:center;
+  gap:10px;
+  padding:9px 11px;
+  border-bottom:1px solid #edf1f5;
+}
+.reg-row:last-child{border-bottom:0}
+.reg-name{
+  font-size:14px;
+  font-weight:800;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.reg-value{
+  font-size:15px;
+  font-weight:900;
+  text-align:left;
+}
+.reg-time{
+  font-size:11px;
+  color:var(--muted);
+  text-align:right;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.reg-loading,.reg-empty,.reg-error{
+  padding:14px 12px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+}
+.reg-error{color:#a72d3c;background:#fff8f8}
 .empty{
   grid-column:1/-1;
   text-align:center;
@@ -193,6 +250,8 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
   .meta{grid-template-columns:1fr 1fr}
   .controls-right{width:100%;flex-wrap:wrap}
   .search{max-width:none}
+  .reg-row{grid-template-columns:1fr auto}
+  .reg-time{grid-column:1/-1;text-align:left;margin-top:-4px}
 }
 </style>
 </head>
@@ -203,7 +262,7 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
   <div class="header">
     <div>
       <h1>Sistem Durum Raporu</h1>
-      <div class="subtitle">Cihazların güncel bağlantı durumu</div>
+      <div class="subtitle">Cihazların güncel bağlantı ve register bilgileri</div>
     </div>
     <div class="refresh-info">
       Son güncelleme:<br>
@@ -253,7 +312,7 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
   <div class="controls">
     <h2>Cihazlar</h2>
     <div class="controls-right">
-      <input id="search" class="search" placeholder="Cihaz ara">
+      <input id="search" class="search" placeholder="Cihaz adı / ID / SN / IP ara">
       <button class="btn btn-light" id="refreshBtn">Yenile</button>
     </div>
   </div>
@@ -270,7 +329,13 @@ input:focus,select:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,2
 
 <script>
 const BASE = "https://api.diacloudsolutions.com.cn";
-const state = { devices: [] };
+
+const state = {
+  devices: [],
+  registers: {},
+  registerErrors: {},
+  loadingRegisters: {}
+};
 
 const $ = id => document.getElementById(id);
 
@@ -284,9 +349,13 @@ function b64(text){
 function getHeaders(){
   const username = $("username").value.trim();
   const password = $("password").value;
-  if(!username || !password) throw new Error("Kullanıcı adı ve şifre gerekli.");
+
+  if(!username || !password){
+    throw new Error("Kullanıcı adı ve şifre gerekli.");
+  }
 
   const token = b64(username + ":" + password);
+
   return {
     "Accept":"application/json",
     "Authorization":"Basic " + token
@@ -297,9 +366,17 @@ function getArray(payload){
   if(Array.isArray(payload)) return payload;
   if(!payload || typeof payload !== "object") return [];
 
-  for(const key of ["data","devices","items","list","rows","result"]){
+  for(const key of ["data","devices","regs","registers","items","list","rows","result"]){
     if(Array.isArray(payload[key])) return payload[key];
   }
+
+  // Bazı API'ler data altında ikinci bir dizi döndürebilir.
+  if(payload.data && typeof payload.data === "object"){
+    for(const key of ["regs","registers","items","list","rows","result"]){
+      if(Array.isArray(payload.data[key])) return payload.data[key];
+    }
+  }
+
   return [];
 }
 
@@ -342,46 +419,262 @@ function hideError(){
   $("errorBox").style.display = "none";
 }
 
+async function apiGet(path){
+  const response = await fetch(BASE + path, {
+    method:"GET",
+    headers:getHeaders(),
+    mode:"cors",
+    cache:"no-store"
+  });
+
+  const text = await response.text();
+  let data;
+
+  try{
+    data = text ? JSON.parse(text) : null;
+  }catch{
+    data = text;
+  }
+
+  if(!response.ok){
+    throw new Error("HTTP " + response.status);
+  }
+
+  return data;
+}
+
+function deviceIdOf(device){
+  return value(device,"id","device_id","deviceId");
+}
+
+function registerAddress(reg){
+  return value(reg,"addr","address","reg_addr","regAddr");
+}
+
+function registerLabel(reg){
+  const alias = value(
+    reg,
+    "name",
+    "alias_name",
+    "aliasName",
+    "alias",
+    "label",
+    "display_name",
+    "displayName"
+  );
+
+  if(alias !== undefined && alias !== null && String(alias).trim() !== ""){
+    return String(alias);
+  }
+
+  const addr = registerAddress(reg);
+
+  if(addr !== undefined && addr !== null && String(addr).trim() !== ""){
+    const s = String(addr);
+
+    // API zaten M0, $2048 vb. biçiminde bir adres döndürüyorsa aynen göster.
+    if(/^M\d+$/i.test(s) || /^\$/.test(s)){
+      return s;
+    }
+
+    return "$" + s;
+  }
+
+  return "Register";
+}
+
+function registerValue(reg){
+  return value(
+    reg,
+    "value",
+    "Value",
+    "reg_value",
+    "regValue",
+    "val",
+    "current_value",
+    "currentValue"
+  );
+}
+
+function registerTime(reg){
+  return value(
+    reg,
+    "time",
+    "Time",
+    "reg_time",
+    "regTime",
+    "timestamp",
+    "update_time",
+    "updateTime",
+    "updated_at",
+    "updatedAt",
+    "date"
+  );
+}
+
 async function loadDevices(){
   hideError();
   $("connectBtn").disabled = true;
   $("refreshBtn").disabled = true;
 
   try{
-    const response = await fetch(BASE + "/devices", {
-      method:"GET",
-      headers:getHeaders(),
-      mode:"cors",
-      cache:"no-store"
-    });
-
-    const text = await response.text();
-    let data;
-
-    try{
-      data = text ? JSON.parse(text) : null;
-    }catch{
-      data = text;
-    }
-
-    if(!response.ok){
-      throw new Error("API hatası: HTTP " + response.status);
-    }
+    const data = await apiGet("/devices");
 
     state.devices = getArray(data);
+    state.registers = {};
+    state.registerErrors = {};
+    state.loadingRegisters = {};
+
+    // Önce cihaz kartlarını hemen göster.
     render();
+
+    // Sonra her cihazın registerlarını getir.
+    await loadAllRegisters();
+
     $("lastUpdate").textContent = new Date().toLocaleString("tr-TR");
 
   }catch(err){
     showError(
       err instanceof TypeError
-      ? "API bağlantısı kurulamadı. Tarayıcı CORS/preflight isteğini engelliyor olabilir."
-      : err.message
+        ? "API bağlantısı kurulamadı. Tarayıcı CORS/preflight isteğini engelliyor olabilir."
+        : "API bağlantısı başarısız: " + err.message
     );
   }finally{
     $("connectBtn").disabled = false;
     $("refreshBtn").disabled = false;
   }
+}
+
+async function loadAllRegisters(){
+  const ids = state.devices
+    .map(deviceIdOf)
+    .filter(id => id !== undefined && id !== null && String(id) !== "");
+
+  // Çok sayıda cihazda API'yi aynı anda aşırı yüklememek için 4'lü gruplar.
+  const concurrency = 4;
+  let cursor = 0;
+
+  async function worker(){
+    while(cursor < ids.length){
+      const index = cursor++;
+      const id = ids[index];
+
+      state.loadingRegisters[String(id)] = true;
+      render();
+
+      try{
+        const data = await apiGet(
+          "/devices/" + encodeURIComponent(id) + "/regs"
+        );
+
+        state.registers[String(id)] = getArray(data);
+        delete state.registerErrors[String(id)];
+
+      }catch(err){
+        state.registers[String(id)] = [];
+        state.registerErrors[String(id)] = err.message;
+
+      }finally{
+        state.loadingRegisters[String(id)] = false;
+        render();
+      }
+    }
+  }
+
+  const workers = [];
+  for(let i = 0; i < Math.min(concurrency, ids.length); i++){
+    workers.push(worker());
+  }
+
+  await Promise.all(workers);
+}
+
+function renderRegisterSection(device){
+  const id = String(deviceIdOf(device) ?? "");
+
+  if(state.loadingRegisters[id]){
+    return `
+      <div class="register-section">
+        <div class="register-title">
+          <span>Registers</span>
+        </div>
+        <div class="register-list">
+          <div class="reg-loading">Register bilgileri yükleniyor…</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if(state.registerErrors[id]){
+    return `
+      <div class="register-section">
+        <div class="register-title">
+          <span>Registers</span>
+        </div>
+        <div class="register-list">
+          <div class="reg-error">
+            Register bilgisi alınamadı: ${esc(state.registerErrors[id])}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const regs = state.registers[id];
+
+  if(regs === undefined){
+    return `
+      <div class="register-section">
+        <div class="register-title">
+          <span>Registers</span>
+        </div>
+        <div class="register-list">
+          <div class="reg-loading">Register bilgileri bekleniyor…</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if(!regs.length){
+    return `
+      <div class="register-section">
+        <div class="register-title">
+          <span>Registers</span>
+          <span class="register-count">0 kayıt</span>
+        </div>
+        <div class="register-list">
+          <div class="reg-empty">Register bulunamadı.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="register-section">
+      <div class="register-title">
+        <span>Registers</span>
+        <span class="register-count">${regs.length} kayıt</span>
+      </div>
+
+      <div class="register-list">
+        ${regs.map(reg => `
+          <div class="reg-row">
+            <div class="reg-name" title="${esc(registerLabel(reg))}">
+              ${esc(registerLabel(reg))}
+            </div>
+
+            <div class="reg-value">
+              ${esc(registerValue(reg))}
+            </div>
+
+            <div class="reg-time" title="${esc(registerTime(reg))}">
+              ${esc(registerTime(reg))}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
 }
 
 function render(){
@@ -397,19 +690,30 @@ function render(){
   $("totalCount").textContent = all.length;
   $("onlineCount").textContent = online;
   $("offlineCount").textContent = offline;
+
   $("avgLatency").textContent =
     latencies.length
-      ? Math.round(latencies.reduce((a,b)=>a+b,0)/latencies.length) + " ms"
+      ? Math.round(latencies.reduce((a,b)=>a+b,0) / latencies.length) + " ms"
       : "—";
 
   const q = $("search").value.trim().toLowerCase();
 
   const devices = all.filter(d => {
+    const id = String(deviceIdOf(d) ?? "");
+    const regs = state.registers[id] || [];
+
+    const registerText = regs.map(r => [
+      registerLabel(r),
+      registerAddress(r),
+      registerValue(r)
+    ].join(" ")).join(" ");
+
     const text = [
       value(d,"name","device_name"),
-      value(d,"id","device_id"),
+      deviceIdOf(d),
       value(d,"sn","SN"),
-      value(d,"ip","IP")
+      value(d,"ip","IP"),
+      registerText
     ].join(" ").toLowerCase();
 
     return text.includes(q);
@@ -426,13 +730,15 @@ function render(){
 
     return `
       <div class="card device">
+
         <div class="device-head">
           <div>
             <div class="device-name">
               ${esc(value(d,"name","device_name") || "İsimsiz cihaz")}
             </div>
+
             <div class="device-id">
-              ID: ${esc(value(d,"id","device_id"))}
+              ID: ${esc(deviceIdOf(d))}
             </div>
           </div>
 
@@ -455,10 +761,15 @@ function render(){
           <div class="meta-box">
             <div class="meta-label">Gecikme</div>
             <div class="meta-value">
-              ${value(d,"latency") !== undefined ? esc(value(d,"latency")) + " ms" : "—"}
+              ${value(d,"latency") !== undefined
+                ? esc(value(d,"latency")) + " ms"
+                : "—"}
             </div>
           </div>
         </div>
+
+        ${renderRegisterSection(d)}
+
       </div>
     `;
   }).join("");
