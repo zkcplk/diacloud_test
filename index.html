@@ -609,7 +609,14 @@ function friendlyRegisterHtml(reg){
   }
 
   if(key === "2051"){
-    return `<div class="reg-friendly metric-friendly"><span>Kazan Sıcaklığı:</span><strong>${esc(raw)}</strong></div>`;
+    const temp = Number(raw);
+
+    const formattedTemp =
+      Number.isFinite(temp)
+        ? (temp / 10).toFixed(1)
+        : safe(raw);
+
+    return `<div class="reg-friendly metric-friendly"><span>Kazan Sıcaklığı:</span><strong>${esc(formattedTemp)}</strong></div>`;
   }
 
   return "";
