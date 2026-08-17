@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Durum Raporu | Zeki ÇIPLAK</title>
+<title>DIACloud Durum Raporu</title>
 <style>
 :root{
   --bg:#f5f7fb;
@@ -199,6 +199,40 @@ input:focus{border-color:#8eb1f5;box-shadow:0 0 0 3px rgba(47,111,237,.08)}
   font-size:15px;
   font-weight:900;
   text-align:left;
+}
+.reg-friendly{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:2px 0;
+  font-size:14px;
+  font-weight:800;
+}
+.motor-running{
+  color:#07854f;
+  background:#e8f8f0;
+  border:1px solid #bde9d3;
+  border-radius:8px;
+  padding:8px 10px;
+}
+.motor-stopped{
+  color:#8f1724;
+  background:#fbeaec;
+  border:1px solid #efc1c7;
+  border-radius:8px;
+  padding:8px 10px;
+}
+.metric-friendly{
+  color:#25354d;
+  background:#f8fafc;
+  border:1px solid #e7edf4;
+  border-radius:8px;
+  padding:8px 10px;
+}
+.metric-friendly strong{
+  margin-left:auto;
+  color:#111827;
 }
 .reg-time{
   font-size:11px;
@@ -470,11 +504,16 @@ function registerLabel(reg){
   const addr = registerAddress(reg);
 
   if(addr !== undefined && addr !== null && String(addr).trim() !== ""){
-    const s = String(addr);
+    const s = String(addr).trim();
 
-    // API zaten M0, $2048 vb. biçiminde bir adres döndürüyorsa aynen göster.
     if(/^M\d+$/i.test(s) || /^\$/.test(s)){
-      return s;
+      return s.toUpperCase();
+    }
+
+    const n = Number(s);
+
+    if(Number.isInteger(n) && n >= 1536 && n <= 2047){
+      return "M" + (n - 1536);
     }
 
     return "$" + s;
@@ -510,6 +549,70 @@ function registerTime(reg){
     "updatedAt",
     "date"
   );
+}
+
+function logicalRegisterKey(reg){
+  const label = String(registerLabel(reg)).toUpperCase();
+
+  if(/^M\d+$/.test(label)) return label;
+  if(/^\$\d+$/.test(label)) return label.substring(1);
+
+  const addr = Number(registerAddress(reg));
+
+  if(Number.isInteger(addr) && addr >= 1536 && addr <= 2047){
+    return "M" + (addr - 1536);
+  }
+
+  if(Number.isFinite(addr)) return String(addr);
+
+  return label;
+}
+
+function formatDurationSeconds(raw){
+  const n = Number(raw);
+  if(!Number.isFinite(n)) return safe(raw);
+
+  const total = Math.max(0, Math.floor(n));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+
+  return String(hours).padStart(2,"0") + " sa " +
+         String(minutes).padStart(2,"0") + " dk " +
+         String(seconds).padStart(2,"0") + " sn";
+}
+
+function friendlyRegisterHtml(reg){
+  const key = logicalRegisterKey(reg);
+  const raw = registerValue(reg);
+
+  if(key === "M20"){
+    if(Number(raw) === 1){
+      return `<div class="reg-friendly motor-running">Motor1 → Çalışıyor</div>`;
+    }
+
+    if(Number(raw) === 0){
+      return `<div class="reg-friendly motor-stopped">Motor1 → Çalışmıyor</div>`;
+    }
+
+    return `<div class="reg-friendly metric-friendly"><span>Motor1 Durumu:</span><strong>${esc(raw)}</strong></div>`;
+  }
+
+  const runtimeLabels = {
+    "2048":"Motor1 Çalışma Süresi:",
+    "2049":"Motor2 Çalışma Süresi:",
+    "2050":"Motor3 Çalışma Süresi:"
+  };
+
+  if(runtimeLabels[key]){
+    return `<div class="reg-friendly metric-friendly"><span>${runtimeLabels[key]}</span><strong>${esc(formatDurationSeconds(raw))}</strong></div>`;
+  }
+
+  if(key === "2051"){
+    return `<div class="reg-friendly metric-friendly"><span>Kazan Sıcaklığı:</span><strong>${esc(raw)}</strong></div>`;
+  }
+
+  return "";
 }
 
 async function loadDevices(){
@@ -563,11 +666,35 @@ async function loadAllRegisters(){
       render();
 
       try{
-        const data = await apiGet(
-          "/devices/" + encodeURIComponent(id) + "/regs"
-        );
+        const [wordResult, mResult] = await Promise.allSettled([
+          apiGet("/devices/" + encodeURIComponent(id) + "/regs"),
+          apiGet("/devices/" + encodeURIComponent(id) + "/regs?start=1536")
+        ]);
 
-        state.registers[String(id)] = getArray(data);
+        const words =
+          wordResult.status === "fulfilled" ? getArray(wordResult.value) : [];
+
+        const mRegs =
+          mResult.status === "fulfilled" ? getArray(mResult.value) : [];
+
+        const merged = [];
+        const seen = new Set();
+
+        [...mRegs, ...words].forEach(reg => {
+          const key = String(registerAddress(reg)) + "|" + String(registerLabel(reg));
+
+          if(!seen.has(key)){
+            seen.add(key);
+            merged.push(reg);
+          }
+        });
+
+        state.registers[String(id)] = merged;
+
+        if(wordResult.status === "rejected" && mResult.status === "rejected"){
+          throw new Error("Register bilgileri alınamadı.");
+        }
+
         delete state.registerErrors[String(id)];
 
       }catch(err){
@@ -657,21 +784,37 @@ function renderRegisterSection(device){
       </div>
 
       <div class="register-list">
-        ${regs.map(reg => `
-          <div class="reg-row">
-            <div class="reg-name" title="${esc(registerLabel(reg))}">
-              ${esc(registerLabel(reg))}
-            </div>
+        ${regs.map(reg => {
+          const friendly = friendlyRegisterHtml(reg);
 
-            <div class="reg-value">
-              ${esc(registerValue(reg))}
-            </div>
+          if(friendly){
+            return `
+              <div class="reg-row">
+                ${friendly}
+                <div class="reg-time" style="grid-column:1/-1;text-align:left;margin-top:-2px"
+                     title="${esc(registerTime(reg))}">
+                  Son veri: ${esc(registerTime(reg))}
+                </div>
+              </div>
+            `;
+          }
 
-            <div class="reg-time" title="${esc(registerTime(reg))}">
-              ${esc(registerTime(reg))}
+          return `
+            <div class="reg-row">
+              <div class="reg-name" title="${esc(registerLabel(reg))}">
+                ${esc(registerLabel(reg))}
+              </div>
+
+              <div class="reg-value">
+                ${esc(registerValue(reg))}
+              </div>
+
+              <div class="reg-time" title="${esc(registerTime(reg))}">
+                ${esc(registerTime(reg))}
+              </div>
             </div>
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
       </div>
     </div>
   `;
