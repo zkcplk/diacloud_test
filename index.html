@@ -1,427 +1,576 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DIACloud API Test Paneli</title>
-  <meta name="description" content="DIACloud REST API için tek dosyalık test paneli" />
-  <style>
-    :root{
-      --bg:#0b1020;--panel:#11182b;--panel2:#151f36;--line:#263451;
-      --text:#eaf0ff;--muted:#9fb0cf;--blue:#62a8ff;--green:#45d19a;
-      --yellow:#ffcf5a;--red:#ff6b78;--shadow:0 18px 50px rgba(0,0,0,.28)
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#09101d,#0b1020 35%,#0a0f1c);
-      color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    button,input,select,textarea{font:inherit}
-    .wrap{max-width:1400px;margin:auto;padding:24px}
-    .header{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
-    h1{font-size:25px;margin:0 0 5px}.sub{color:var(--muted)}
-    .badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);
-      background:#10182a;border-radius:999px;padding:7px 11px;color:#cbd8f1;font-size:12px}
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-    .grid{display:grid;grid-template-columns:330px 1fr;gap:18px}
-    .card{background:rgba(17,24,43,.96);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
-    .side{padding:15px;position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto}
-    .main{padding:20px}
-    .section-title{font-weight:700;margin:2px 0 10px;color:#dce7fb}
-    .endpoint-list{display:flex;flex-direction:column;gap:7px}
-    .ep{width:100%;text-align:left;border:1px solid transparent;border-radius:10px;padding:10px 11px;
-      background:#0e1628;color:#dce7fb;cursor:pointer;transition:.15s}
-    .ep:hover{border-color:#344666}.ep.active{background:#172540;border-color:#4773aa}
-    .method{display:inline-block;min-width:47px;font-weight:800;font-size:11px}
-    .GET{color:var(--green)}.PUT{color:var(--yellow)}.DELETE{color:var(--red)}
-    .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-    .note-mini{color:var(--muted);font-size:11px;margin-top:3px}
-    hr{border:0;border-top:1px solid var(--line);margin:15px 0}
-    label{display:block;font-size:12px;color:#b7c6df;margin:0 0 5px}
-    input,select,textarea{width:100%;color:var(--text);background:#0a1221;border:1px solid #2c3b59;border-radius:9px;
-      padding:10px 11px;outline:none}
-    input:focus,select:focus,textarea:focus{border-color:#5e91d0;box-shadow:0 0 0 3px rgba(98,168,255,.12)}
-    textarea{min-height:120px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .row{display:flex;gap:10px;align-items:end}.row>*{flex:1}
-    .authbox{background:#0d1628;border:1px solid #263755;padding:14px;border-radius:12px;margin-bottom:15px}
-    .request-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-    .big-method{font-weight:900;padding:7px 10px;border-radius:8px;background:#0b1425;border:1px solid var(--line)}
-    .url-preview{flex:1;min-width:260px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-      color:#c8d9f6;background:#09111f;border:1px solid #23334f;padding:9px 11px;border-radius:8px;word-break:break-all}
-    .btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}
-    .btn-primary{background:#4e91e8;color:white}.btn-primary:hover{filter:brightness(1.08)}
-    .btn-secondary{background:#192841;color:#dce7fb;border:1px solid #324667}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .actions{display:flex;gap:9px;justify-content:flex-end;margin:15px 0}
-    .help{border:1px solid #3f4a63;background:#121a2b;border-radius:11px;padding:12px 13px;color:#b8c6df;margin:13px 0}
-    .help strong{color:#f0f5ff}.warning{border-color:#6b5831;background:#1c1a13;color:#ead8a4}
-    .result-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 9px}
-    .pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:12px;color:#c7d4ea}
-    .pill.ok{border-color:#286749;color:#73e3b5}.pill.err{border-color:#793b46;color:#ff939d}
-    pre{margin:0;background:#080e19;border:1px solid #23304a;border-radius:12px;padding:14px;overflow:auto;
-      min-height:230px;max-height:560px;color:#dce8ff;white-space:pre-wrap;word-break:break-word;
-      font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .hidden{display:none!important}.muted{color:var(--muted)}
-    details{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#0d1525}
-    summary{cursor:pointer;font-weight:700;color:#cbd8ed}
-    .footer{color:#7f91b2;font-size:12px;text-align:center;padding:20px 0 4px}
-    @media(max-width:900px){
-      .grid{grid-template-columns:1fr}.side{position:static;max-height:none}.form-grid,.form-grid.three{grid-template-columns:1fr}
-      .header{flex-direction:column}.wrap{padding:12px}.main{padding:14px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIACloud Kontrol Paneli</title>
+<style>
+:root{
+  --bg:#08111f;--panel:#0e1a2d;--panel2:#12223a;--panel3:#0a1627;--line:#233958;
+  --text:#eef5ff;--muted:#91a6c3;--blue:#4f9cf9;--green:#32d296;--red:#ff6474;
+  --yellow:#ffc857;--cyan:#56d8e4;--shadow:0 18px 60px rgba(0,0,0,.28)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(8,17,31,.92);backdrop-filter:blur(15px);border-bottom:1px solid var(--line)}
+.topin{max-width:1500px;margin:auto;padding:13px 18px;display:flex;gap:14px;align-items:center}
+.brand{font-weight:900;font-size:18px;white-space:nowrap}.brand span{color:var(--blue)}
+.connection{display:flex;gap:8px;align-items:center;margin-left:auto}
+.dot{width:9px;height:9px;border-radius:50%;background:#526277}.dot.ok{background:var(--green);box-shadow:0 0 14px rgba(50,210,150,.55)}
+.dot.err{background:var(--red)}
+.statusText{font-size:12px;color:var(--muted)}
+.layout{max-width:1500px;margin:auto;padding:18px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px}
+.sidebar,.card{background:linear-gradient(180deg,rgba(15,27,47,.98),rgba(12,23,40,.98));border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.sidebar{padding:14px;height:calc(100vh - 86px);position:sticky;top:78px;overflow:auto}
+.navtitle{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7188a8;margin:10px 8px 7px}
+.navbtn{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#cbd8eb;border-radius:10px;padding:10px 11px;margin:2px 0;display:flex;align-items:center;gap:9px}
+.navbtn:hover{background:#12233a;border-color:#263d5d}.navbtn.active{background:#163052;border-color:#315b8b;color:#fff}
+.icon{width:23px;text-align:center;font-size:16px}
+.main{min-width:0}
+.auth{padding:16px;margin-bottom:16px}
+.authgrid{display:grid;grid-template-columns:1.1fr 1.1fr 1fr auto;gap:10px;align-items:end}
+label{display:block;color:#a9bbd3;font-size:11px;font-weight:700;margin-bottom:5px}
+input,select,textarea{width:100%;background:#081526;border:1px solid #2a4162;color:#edf5ff;border-radius:9px;padding:10px 11px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#5296e9;box-shadow:0 0 0 3px rgba(79,156,249,.12)}
+.btn{border:1px solid transparent;border-radius:9px;padding:10px 13px;font-weight:800;color:#fff;background:#1c3453}
+.btn:hover{filter:brightness(1.08)}.btn.primary{background:var(--blue)}.btn.success{background:#147957}.btn.danger{background:#9f3040}
+.btn.warn{background:#8b671d}.btn.ghost{background:#11243c;border-color:#2a466d;color:#d8e7fa}.btn.sm{padding:7px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.page{display:none}.page.active{display:block}
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:2px 2px 13px}
+h1{font-size:24px;margin:0}h2{font-size:17px;margin:0}.subtitle{color:var(--muted);margin-top:3px;font-size:13px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search{max-width:310px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:13px}
+.stat{padding:14px}.statnum{font-size:26px;font-weight:900;line-height:1.1}.statlabel{color:var(--muted);font-size:12px;margin-top:5px}
+.devices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.device{padding:15px;position:relative;overflow:hidden}.device.offline{opacity:.76}
+.deviceHead{display:flex;gap:12px;align-items:flex-start}.deviceName{font-size:17px;font-weight:900}.deviceId{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#7f95b5}
+.onlineBadge{margin-left:auto;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900}
+.onlineBadge.on{background:rgba(50,210,150,.12);color:#58e4ad;border:1px solid rgba(50,210,150,.35)}
+.onlineBadge.off{background:rgba(255,100,116,.09);color:#ff8995;border:1px solid rgba(255,100,116,.27)}
+.deviceMeta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}
+.meta{background:#0a1728;border:1px solid #1e3452;border-radius:9px;padding:8px;min-width:0}
+.metak{font-size:10px;text-transform:uppercase;color:#6f87a8}.metav{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:12px}
+.health{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.health span{font-size:11px;border:1px solid #29405f;padding:4px 7px;border-radius:999px;color:#a9bad2}
+.health .good{color:#68dfb4;border-color:#2b614f}.health .bad{color:#ff8793;border-color:#673640}
+.deviceActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.empty{padding:35px;text-align:center;color:#8095b2;border:1px dashed #2a4264;border-radius:14px}
+.tableCard{overflow:hidden}.tableWrap{overflow:auto;max-height:620px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 11px;border-bottom:1px solid #203653;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#13233a;color:#9eb3cf;font-size:10px;text-transform:uppercase;letter-spacing:.06em;z-index:2}
+td code{font-size:11px}.tableActions{display:flex;gap:5px;flex-wrap:wrap}
+.json{background:#06101e;color:#d8e8ff;padding:13px;border:1px solid #203958;border-radius:10px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:500px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.panel{padding:16px}.split{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.field{margin-bottom:9px}.hint{font-size:11px;color:#7f94b3;margin-top:5px}.muted{color:var(--muted)}
+.alert{padding:11px 13px;border-radius:10px;border:1px solid #5c4b26;background:#1f1b11;color:#e6d09a;font-size:12px}
+.apiLog{position:fixed;right:15px;bottom:15px;z-index:40;width:min(430px,calc(100vw - 30px));max-height:46vh;display:none}
+.apiLog.open{display:block}.loghead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.logbody{padding:10px;max-height:37vh;overflow:auto;background:#081421}.logitem{padding:8px;border-bottom:1px solid #1b304b;font-size:11px}
+.logmethod{font-weight:900}.GET{color:var(--green)}.PUT{color:var(--yellow)}.DELETE{color:var(--red)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:80;background:#10243c;border:1px solid #35587f;color:#fff;padding:10px 14px;border-radius:10px;display:none;box-shadow:var(--shadow)}
+.toast.show{display:block}
+.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.64);z-index:60;display:none;padding:20px;overflow:auto}
+.modalBack.open{display:flex;align-items:flex-start;justify-content:center}.modal{width:min(980px,100%);margin:auto;background:#0d1a2c;border:1px solid #2a4569;border-radius:16px;box-shadow:0 28px 90px rgba(0,0,0,.5)}
+.modalHead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}.modalHead h2{flex:1}
+.modalBody{padding:16px}.close{background:transparent;color:#a8bbd4;border:0;font-size:22px}
+.registerRows{display:flex;flex-direction:column;gap:7px}.regRow{display:grid;grid-template-columns:1fr 1fr auto;gap:7px}
+.pill{display:inline-flex;border:1px solid #2e4767;border-radius:999px;padding:4px 8px;font-size:11px;color:#a9bdd9}
+footer{text-align:center;color:#657b9a;font-size:11px;padding:18px}
+@media(max-width:1100px){.devices{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.authgrid{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}}
+@media(max-width:760px){.layout{grid-template-columns:1fr;padding:10px}.sidebar{height:auto;position:static;display:flex;overflow:auto;gap:3px}.navtitle{display:none}.navbtn{width:auto;white-space:nowrap}.topin{padding:10px}.connection .statusText{display:none}.authgrid,.formgrid,.formgrid.three{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.deviceMeta{grid-template-columns:1fr 1fr}.modalBack{padding:8px}.brand{font-size:15px}}
+</style>
 </head>
 <body>
-<div class="wrap">
-  <div class="header">
-    <div>
-      <h1>DIACloud API Test Paneli</h1>
-      <div class="sub">Tek dosya • GitHub Pages uyumlu • GET / PUT / DELETE</div>
+<div class="topbar">
+  <div class="topin">
+    <div class="brand"><span>DIA</span>Cloud Kontrol Paneli</div>
+    <button class="btn ghost sm" id="logToggle">API Günlüğü</button>
+    <div class="connection">
+      <span id="connDot" class="dot"></span>
+      <span id="connText" class="statusText">Bağlantı kurulmadı</span>
     </div>
-    <div class="badge"><span class="dot"></span> Base URL: api.diacloudsolutions.com.cn</div>
   </div>
-
-  <div class="grid">
-    <aside class="card side">
-      <div class="section-title">REST endpoint'leri</div>
-      <div id="endpointList" class="endpoint-list"></div>
-      <hr>
-      <button class="ep" id="customBtn">
-        <span class="method">ÖZEL</span>
-        <span class="path">Custom request</span>
-        <div class="note-mini">İstediğin URL ve metodu elle gir</div>
-      </button>
-      <hr>
-      <div class="note-mini">
-        Not: DIACloud V1.4 dokümanında hesap başına API çağrı limiti saatte 10.000 olarak belirtilmiştir.
-      </div>
-    </aside>
-
-    <main class="card main">
-      <div class="authbox">
-        <div class="section-title">Kimlik doğrulama</div>
-        <div class="form-grid">
-          <div>
-            <label for="username">DIACloud kullanıcı adı</label>
-            <input id="username" autocomplete="username" placeholder="kullanici@example.com">
-          </div>
-          <div>
-            <label for="password">DIACloud şifre</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
-          </div>
-        </div>
-        <div class="form-grid" style="margin-top:10px">
-          <div>
-            <label for="authHeader">Auth header</label>
-            <select id="authHeader">
-              <option value="Authorization">Authorization: Basic … (önerilen)</option>
-              <option value="authoriz">authoriz: Basic … (dokümandaki adla dene)</option>
-            </select>
-          </div>
-          <div>
-            <label for="baseUrl">Base URL</label>
-            <input id="baseUrl" value="https://api.diacloudsolutions.com.cn">
-          </div>
-        </div>
-        <div class="note-mini" style="margin-top:8px">Şifre localStorage'a kaydedilmez. Sayfa yenilenince yeniden girmen gerekir.</div>
-      </div>
-
-      <div class="request-head">
-        <span id="methodBadge" class="big-method GET">GET</span>
-        <div id="urlPreview" class="url-preview"></div>
-      </div>
-
-      <div id="presetFields">
-        <div class="form-grid">
-          <div id="deviceField" class="hidden">
-            <label for="deviceId">device_id</label>
-            <input id="deviceId" placeholder="örn. 21907">
-          </div>
-          <div id="regField" class="hidden">
-            <label for="regAddr">reg_addr</label>
-            <input id="regAddr" placeholder="örn. 2048">
-          </div>
-        </div>
-
-        <div id="querySection" class="hidden" style="margin-top:12px">
-          <div class="section-title">Query parametreleri</div>
-          <div class="form-grid three">
-            <div id="qStartWrap" class="hidden"><label for="qStart">start</label><input id="qStart" placeholder="örn. 1536"></div>
-            <div id="qRegsWrap" class="hidden"><label for="qRegs">regs</label><input id="qRegs" placeholder="örn. 2048,2050"></div>
-            <div id="qPageWrap" class="hidden"><label for="qPage">page</label><input id="qPage" placeholder="örn. 2"></div>
-            <div id="qLimitWrap" class="hidden"><label for="qLimit">limit</label><input id="qLimit" placeholder="örn. 100"></div>
-            <div id="qFromWrap" class="hidden"><label for="qFrom">from (UTC)</label><input id="qFrom" placeholder="2020-06-16 00:00:00"></div>
-            <div id="qToWrap" class="hidden"><label for="qTo">to (UTC)</label><input id="qTo" placeholder="2020-06-17 00:00:00"></div>
-            <div id="qGapWrap" class="hidden"><label for="qGap">gap (saniye)</label><input id="qGap" placeholder="örn. 90"></div>
-          </div>
-        </div>
-
-        <div id="bodySection" class="hidden" style="margin-top:12px">
-          <div class="section-title">JSON request body</div>
-          <textarea id="bodyInput">[
-  {"addr": 2048, "value": 100},
-  {"addr": 2049, "value": 100}
-]</textarea>
-        </div>
-      </div>
-
-      <div id="customFields" class="hidden">
-        <div class="form-grid">
-          <div>
-            <label for="customMethod">HTTP metodu</label>
-            <select id="customMethod">
-              <option>GET</option><option>PUT</option><option>POST</option>
-              <option>PATCH</option><option>DELETE</option>
-            </select>
-          </div>
-          <div>
-            <label for="customUrl">Tam URL veya /path</label>
-            <input id="customUrl" placeholder="/devices">
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <label for="customBody">Body (GET/DELETE için boş bırakılabilir)</label>
-          <textarea id="customBody" placeholder='{"key":"value"}'></textarea>
-        </div>
-      </div>
-
-      <div id="endpointHelp" class="help"></div>
-      <div class="help warning">
-        <strong>GitHub Pages notu:</strong> Bu sayfa tarayıcıdan DIACloud'a doğrudan istek yollar.
-        API sunucusu CORS kapsamında GitHub Pages origin'ine ve <code>Authorization</code> header'ına izin vermiyorsa
-        tarayıcı isteği engeller. Böyle bir durumda sadece HTML/JS ile bunu güvenli biçimde aşmak mümkün değildir;
-        küçük bir serverless proxy gerekir. Kullanıcı adı/şifreyi herkese açık kaynak koduna kesinlikle yazma.
-      </div>
-
-      <div class="actions">
-        <button id="copyUrlBtn" class="btn btn-secondary">URL'yi kopyala</button>
-        <button id="sendBtn" class="btn btn-primary">İsteği gönder</button>
-      </div>
-
-      <div class="result-head">
-        <strong>Yanıt</strong>
-        <span id="statusPill" class="pill">Henüz istek yok</span>
-        <span id="timePill" class="pill">— ms</span>
-      </div>
-      <pre id="result">Bir endpoint seçip kullanıcı adı / şifreni girdikten sonra "İsteği gönder" düğmesine bas.</pre>
-
-      <details>
-        <summary>Son request bilgileri</summary>
-        <pre id="requestDebug" style="min-height:110px;max-height:260px;margin-top:10px">—</pre>
-      </details>
-    </main>
-  </div>
-
-  <div class="footer">DIACloud API için bağımsız test arayüzü. Şifre hiçbir zaman dosyanın içine gömülmemelidir.</div>
 </div>
 
-<script>
-const endpoints = [
-  {id:'devices', method:'GET', path:'/devices', title:'Cihazları listele',
-   help:'Hesap altındaki cihazların temel bilgilerini getirir.'},
-  {id:'alarms', method:'GET', path:'/alarms', title:'Tüm alarmlar (UTC+8)',
-   query:['page','limit','from','to'], help:'Tüm cihaz alarmlarını getirir. Sayfalama ve zaman filtresi kullanılabilir.'},
-  {id:'deviceAlarms', method:'GET', path:'/devices/{device_id}/alarms', title:'Cihaz alarmları (UTC+8)',
-   device:true, query:['page','limit','from','to'], help:'Belirli bir cihazın alarm kayıtlarını getirir.'},
-  {id:'vlns', method:'GET', path:'/vlns', title:'Güvenli tüneller',
-   help:'Hesaptaki secure tunnel / VLN bilgilerini getirir.'},
-  {id:'regs', method:'GET', path:'/devices/{device_id}/regs', title:'Register değerleri (UTC+8)',
-   device:true, query:['start'], help:'Cihazın güncel register değerlerini getirir. M alanı için start=1536 kullanılabilir; varsayılan başlangıç 2048 olarak dokümante edilmiştir.'},
-  {id:'putRegs', method:'PUT', path:'/devices/{device_id}/regs', title:'Register değeri yaz',
-   device:true, body:true, help:'Bir veya birden çok register değerini yazar. Başarılı işlem için dokümanda HTTP 202 örneği verilmiştir.'},
-  {id:'regshistory', method:'GET', path:'/devices/{device_id}/regshistory', title:'Çoklu register geçmişi',
-   device:true, query:['regs','page','limit','from','to','gap'], help:'Register konfigürasyonuna göre çoklu geçmiş verisi getirir. regs zorunludur (örn. 2048,2050).'},
-  {id:'regHistory', method:'GET', path:'/devices/{device_id}/regs/{reg_addr}/history', title:'Tek register geçmişi',
-   device:true, reg:true, query:['page','limit','from','to','gap'], help:'Tek bir register adresinin geçmiş değerlerini getirir.'},
-  {id:'deleteReg', method:'DELETE', path:'/devices/{device_id}/regs/{reg_addr}', title:'Register sil',
-   device:true, reg:true, help:'DİKKAT: V1.4 dokümanı bu endpoint için "not yet open" bilgisini veriyor. Sunucuda kapalı olabilir.'},
-  {id:'v2alarms', method:'GET', path:'/v2/alarms', title:'Tüm alarmlar (UTC)',
-   query:['page','limit','from','to'], help:'v2 alarm endpoint’i. Zaman alanları UTC (0 saat dilimi) olarak döner.'},
-  {id:'v2deviceAlarms', method:'GET', path:'/v2/devices/{device_id}/alarms', title:'Cihaz alarmları (UTC)',
-   device:true, query:['page','limit','from','to'], help:'Belirli cihazın v2/UTC alarm kayıtlarını getirir.'},
-  {id:'v2regs', method:'GET', path:'/v2/devices/{device_id}/regs', title:'Register değerleri (UTC)',
-   device:true, query:['start'], help:'Cihazın güncel register değerlerini UTC zaman bilgisiyle getirir.'}
-];
+<div class="layout">
+  <aside class="sidebar">
+    <div class="navtitle">Kontrol</div>
+    <button class="navbtn active" data-page="dashboard"><span class="icon">▦</span>Cihazlar</button>
+    <button class="navbtn" data-page="allalarms"><span class="icon">⚠</span>Tüm Alarmlar</button>
+    <button class="navbtn" data-page="v2alarms"><span class="icon">◷</span>UTC Alarmlar</button>
+    <button class="navbtn" data-page="tunnels"><span class="icon">⇄</span>Tüneller</button>
+    <div class="navtitle">Araçlar</div>
+    <button class="navbtn" data-page="custom"><span class="icon">⌁</span>Özel Request</button>
+    <button class="navbtn" data-page="info"><span class="icon">ⓘ</span>API Bilgisi</button>
+  </aside>
 
-let current = endpoints[0];
-let customMode = false;
+  <main class="main">
+    <section class="card auth">
+      <div class="authgrid">
+        <div><label>DIACloud kullanıcı adı</label><input id="username" autocomplete="username" placeholder="hesabınız"></div>
+        <div><label>Şifre</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <div>
+          <label>Kimlik doğrulama biçimi</label>
+          <select id="authMode">
+            <option value="authoriz-basic">authoriz: Basic &lt;base64&gt;</option>
+            <option value="authoriz-raw">authoriz: &lt;base64&gt;</option>
+            <option value="authorization-basic">Authorization: Basic &lt;base64&gt;</option>
+          </select>
+        </div>
+        <button class="btn primary" id="connectBtn">Bağlan & Cihazları Getir</button>
+      </div>
+      <div class="hint">Kimlik bilgileri yalnızca bu sekmenin belleğinde tutulur; localStorage'a veya dosyaya kaydedilmez.</div>
+    </section>
+
+    <section id="dashboard" class="page active">
+      <div class="pagehead">
+        <div><h1>Cihazlar</h1><div class="subtitle">Cihaz durumu ve bütün cihaz işlemleri tek ekranda</div></div>
+        <div class="toolbar">
+          <input id="deviceSearch" class="search" placeholder="Cihaz adı, ID, SN veya IP ara">
+          <select id="refreshSelect" style="width:auto">
+            <option value="0">Otomatik yenileme: Kapalı</option>
+            <option value="30">30 sn</option>
+            <option value="60">60 sn</option>
+            <option value="120">2 dk</option>
+          </select>
+          <button class="btn ghost" id="refreshDevices">Yenile</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="card stat"><div id="sTotal" class="statnum">—</div><div class="statlabel">Toplam cihaz</div></div>
+        <div class="card stat"><div id="sOnline" class="statnum">—</div><div class="statlabel">Online</div></div>
+        <div class="card stat"><div id="sOffline" class="statnum">—</div><div class="statlabel">Offline</div></div>
+        <div class="card stat"><div id="sTraffic" class="statnum">—</div><div class="statlabel">Trafik normal</div></div>
+        <div class="card stat"><div id="sLatency" class="statnum">—</div><div class="statlabel">Ort. gecikme</div></div>
+      </div>
+      <div id="deviceGrid" class="devices"><div class="empty">Önce DIACloud hesabına bağlan.</div></div>
+    </section>
+
+    <section id="allalarms" class="page">
+      <div class="pagehead"><div><h1>Tüm Alarmlar</h1><div class="subtitle">GET /alarms • UTC+8</div></div><button class="btn primary" id="loadAllAlarms">Alarmları Getir</button></div>
+      <div class="card panel">
+        <div class="formgrid three">
+          <div><label>From (UTC)</label><input id="aaFrom" placeholder="2026-08-16 00:00:00"></div>
+          <div><label>To (UTC)</label><input id="aaTo" placeholder="2026-08-17 00:00:00"></div>
+          <div><label>Limit</label><input id="aaLimit" placeholder="100"></div>
+        </div>
+      </div>
+      <div id="allAlarmsResult" class="card panel" style="margin-top:12px"><div class="empty">Henüz sorgulanmadı.</div></div>
+    </section>
+
+    <section id="v2alarms" class="page">
+      <div class="pagehead"><div><h1>UTC Alarmlar</h1><div class="subtitle">GET /v2/alarms • UTC saat bilgisi</div></div><button class="btn primary" id="loadV2Alarms">Alarmları Getir</button></div>
+      <div class="card panel">
+        <div class="formgrid three">
+          <div><label>From (UTC)</label><input id="v2aFrom" placeholder="2026-08-16 00:00:00"></div>
+          <div><label>To (UTC)</label><input id="v2aTo" placeholder="2026-08-17 00:00:00"></div>
+          <div><label>Limit</label><input id="v2aLimit" placeholder="100"></div>
+        </div>
+      </div>
+      <div id="v2AlarmsResult" class="card panel" style="margin-top:12px"><div class="empty">Henüz sorgulanmadı.</div></div>
+    </section>
+
+    <section id="tunnels" class="page">
+      <div class="pagehead"><div><h1>Güvenli Tüneller</h1><div class="subtitle">GET /vlns</div></div><button class="btn primary" id="loadTunnels">Tünelleri Getir</button></div>
+      <div id="tunnelResult" class="card panel"><div class="empty">Henüz sorgulanmadı.</div></div>
+    </section>
+
+    <section id="custom" class="page">
+      <div class="pagehead"><div><h1>Özel Request</h1><div class="subtitle">API sayfasındaki veya ilave endpoint'leri manuel test et</div></div><button class="btn primary" id="sendCustom">Gönder</button></div>
+      <div class="card panel">
+        <div class="formgrid">
+          <div><label>HTTP metodu</label><select id="customMethod"><option>GET</option><option>PUT</option><option>DELETE</option><option>POST</option><option>PATCH</option></select></div>
+          <div><label>URL / Path</label><input id="customPath" placeholder="/devices"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label>JSON Body</label><textarea id="customBody" rows="8" placeholder='[{"addr":2048,"value":100}]'></textarea></div>
+      </div>
+      <div id="customResult" class="card panel" style="margin-top:12px"><div class="empty">Henüz istek gönderilmedi.</div></div>
+    </section>
+
+    <section id="info" class="page">
+      <div class="pagehead"><div><h1>API İşlemleri</h1><div class="subtitle">Bu panelde kapsanan DIACloud endpoint'leri</div></div></div>
+      <div class="card panel">
+        <div class="tableWrap"><table>
+          <thead><tr><th>Metot</th><th>Endpoint</th><th>Paneldeki işlem</th></tr></thead>
+          <tbody>
+            <tr><td class="GET">GET</td><td>/devices</td><td>Cihaz listesi ve durum kartları</td></tr>
+            <tr><td class="GET">GET</td><td>/alarms</td><td>Tüm alarmlar (UTC+8)</td></tr>
+            <tr><td class="GET">GET</td><td>/devices/{device_id}/alarms</td><td>Cihaz kartı → Alarmlar</td></tr>
+            <tr><td class="GET">GET</td><td>/vlns</td><td>Tüneller sayfası</td></tr>
+            <tr><td class="GET">GET</td><td>/devices/{device_id}/regs</td><td>Cihaz kartı → Registerlar</td></tr>
+            <tr><td class="PUT">PUT</td><td>/devices/{device_id}/regs</td><td>Register yaz / toplu yaz</td></tr>
+            <tr><td class="GET">GET</td><td>/devices/{device_id}/regshistory</td><td>Çoklu register geçmişi</td></tr>
+            <tr><td class="GET">GET</td><td>/devices/{device_id}/regs/{reg_addr}/history</td><td>Tek register geçmişi</td></tr>
+            <tr><td class="DELETE">DELETE</td><td>/devices/{device_id}/regs/{reg_addr}</td><td>Register silme (API sürümüne bağlı)</td></tr>
+            <tr><td class="GET">GET</td><td>/v2/alarms</td><td>UTC alarmlar</td></tr>
+            <tr><td class="GET">GET</td><td>/v2/devices/{device_id}/alarms</td><td>Cihaz kartı → UTC Alarm</td></tr>
+            <tr><td class="GET">GET</td><td>/v2/devices/{device_id}/regs</td><td>Cihaz kartı → UTC Reg</td></tr>
+          </tbody>
+        </table></div>
+        <div class="alert" style="margin-top:14px">
+          GitHub Pages tarayıcı içinde çalışır. DIACloud sunucusu CORS/preflight isteklerine izin vermiyorsa doğrudan çağrı engellenebilir.
+          Bu durumda aynı arayüz korunup API çağrıları küçük bir proxy/Worker üzerinden geçirilebilir.
+        </div>
+      </div>
+    </section>
+
+    <footer>Bağımsız DIACloud REST API kontrol arayüzü • API anahtarı/şifre kaynak koda gömülmez</footer>
+  </main>
+</div>
+
+<div id="modalBack" class="modalBack">
+  <div class="modal">
+    <div class="modalHead"><h2 id="modalTitle">İşlem</h2><span id="modalTag" class="pill"></span><button class="close" id="modalClose">×</button></div>
+    <div id="modalBody" class="modalBody"></div>
+  </div>
+</div>
+
+<div id="apiLog" class="apiLog card">
+  <div class="loghead"><strong>API Günlüğü</strong><span class="muted" style="margin-left:auto">Son istekler</span><button class="close" id="logClose">×</button></div>
+  <div id="logBody" class="logbody"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const BASE = 'https://api.diacloudsolutions.com.cn';
+const state = { devices:[], refreshTimer:null, selectedDevice:null, logs:[] };
 const $ = id => document.getElementById(id);
 
-function renderEndpoints(){
-  const list = $('endpointList');
-  list.innerHTML = '';
-  endpoints.forEach(ep => {
-    const b = document.createElement('button');
-    b.className = 'ep' + (ep.id === current.id && !customMode ? ' active':'');
-    b.innerHTML = `<span class="method ${ep.method}">${ep.method}</span>
-      <span class="path">${ep.path}</span><div class="note-mini">${ep.title}</div>`;
-    b.onclick = () => { current = ep; customMode=false; renderEndpoints(); $('customBtn').classList.remove('active'); applyEndpoint(); };
-    list.appendChild(b);
-  });
+function toast(msg, ms=2300){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),ms);
 }
+function safe(v, fallback='—'){ return v===undefined||v===null||v===''?fallback:String(v); }
+function esc(s){ return safe(s,'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+function val(obj,...keys){ for(const k of keys){ if(obj && obj[k]!==undefined && obj[k]!==null) return obj[k]; } return undefined; }
+function arrayFrom(payload){
+  if(Array.isArray(payload)) return payload;
+  if(!payload || typeof payload!=='object') return [];
+  for(const k of ['data','devices','items','list','rows','result']){
+    if(Array.isArray(payload[k])) return payload[k];
+  }
+  return [];
+}
+function b64(text){
+  const bytes=new TextEncoder().encode(text); let bin=''; bytes.forEach(x=>bin+=String.fromCharCode(x)); return btoa(bin);
+}
+function authHeaders(){
+  const u=$('username').value.trim(), p=$('password').value;
+  if(!u || !p) throw new Error('Kullanıcı adı ve şifre gerekli.');
+  const token=b64(u+':'+p), mode=$('authMode').value;
+  const h={'Accept':'application/json'};
+  if(mode==='authoriz-basic') h['authoriz']='Basic '+token;
+  if(mode==='authoriz-raw') h['authoriz']=token;
+  if(mode==='authorization-basic') h['Authorization']='Basic '+token;
+  return h;
+}
+function addLog(method,path,status,ms,ok){
+  state.logs.unshift({time:new Date().toLocaleTimeString('tr-TR'),method,path,status,ms,ok});
+  state.logs=state.logs.slice(0,50); renderLogs();
+}
+function renderLogs(){
+  $('logBody').innerHTML=state.logs.length?state.logs.map(x=>`
+    <div class="logitem"><span class="logmethod ${x.method}">${x.method}</span>
+    <span>${esc(x.path)}</span><br><span class="muted">${x.time} • ${x.status} • ${x.ms} ms</span></div>`).join(''):
+    '<div class="empty">Henüz API isteği yok.</div>';
+}
+async function api(method,path,{query=null,body=null}={}){
+  let url=path.startsWith('http')?path:BASE+path;
+  if(query){
+    const sp=new URLSearchParams();
+    Object.entries(query).forEach(([k,v])=>{if(v!==undefined&&v!==null&&String(v).trim()!=='')sp.set(k,String(v).trim())});
+    if([...sp].length) url+=(url.includes('?')?'&':'?')+sp.toString();
+  }
+  const headers=authHeaders(), opts={method,headers,mode:'cors',cache:'no-store'};
+  if(body!==null && method!=='GET' && method!=='DELETE'){ headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  const t0=performance.now();
+  try{
+    const r=await fetch(url,opts), ms=Math.round(performance.now()-t0), text=await r.text();
+    let data; try{data=text?JSON.parse(text):null}catch{data=text}
+    addLog(method,url.replace(BASE,''),r.status,ms,r.ok);
+    if(!r.ok){
+      const detail=typeof data==='string'?data:JSON.stringify(data);
+      throw new Error(`HTTP ${r.status} ${r.statusText}${detail?' — '+detail:''}`);
+    }
+    $('connDot').className='dot ok'; $('connText').textContent='API bağlantısı aktif';
+    return {data,status:r.status,ms,headers:r.headers};
+  }catch(e){
+    const ms=Math.round(performance.now()-t0);
+    if(!String(e.message).startsWith('HTTP ')) addLog(method,url.replace(BASE,''),'ERR',ms,false);
+    $('connDot').className='dot err'; $('connText').textContent='Bağlantı/API hatası';
+    if(e instanceof TypeError){
+      throw new Error('Tarayıcı isteği tamamlayamadı. Olası neden: CORS/preflight engeli, ağ sorunu veya API sunucusuna erişilemiyor.');
+    }
+    throw e;
+  }
+}
+function objectTable(payload){
+  const arr=arrayFrom(payload);
+  if(!arr.length) return `<pre class="json">${esc(JSON.stringify(payload,null,2))}</pre>`;
+  const keys=[...new Set(arr.flatMap(x=>x&&typeof x==='object'?Object.keys(x):[]))].slice(0,14);
+  return `<div class="tableWrap"><table><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead>
+  <tbody>${arr.map(row=>`<tr>${keys.map(k=>`<td>${typeof row[k]==='object'?`<code>${esc(JSON.stringify(row[k]))}</code>`:esc(row[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function renderResult(el,payload){
+  $(el).innerHTML=objectTable(payload)+`<details style="margin-top:10px"><summary>Ham JSON</summary><pre class="json">${esc(JSON.stringify(payload,null,2))}</pre></details>`;
+}
+function setPage(id){
+  document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));
+  document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===id));
+}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
 
-$('customBtn').onclick = () => {
-  customMode = true; renderEndpoints(); $('customBtn').classList.add('active');
-  $('presetFields').classList.add('hidden'); $('customFields').classList.remove('hidden');
-  $('endpointHelp').innerHTML = '<strong>Özel request:</strong> Tam bir URL veya DIACloud base URL altındaki <code>/path</code> değerini girebilirsin.';
-  updatePreview();
+async function loadDevices(showToast=true){
+  try{
+    $('connectBtn').disabled=true; $('refreshDevices').disabled=true; $('connText').textContent='Cihazlar yükleniyor…';
+    const res=await api('GET','/devices');
+    state.devices=arrayFrom(res.data);
+    renderDevices();
+    if(showToast) toast(`${state.devices.length} cihaz yüklendi`);
+  }catch(e){
+    $('deviceGrid').innerHTML=`<div class="empty"><strong>Bağlantı kurulamadı.</strong><br>${esc(e.message)}</div>`;
+    toast(e.message,4500);
+  }finally{$('connectBtn').disabled=false;$('refreshDevices').disabled=false;}
+}
+function isOne(v){ return Number(v)===1 || v===true || String(v).toLowerCase()==='online' || String(v).toLowerCase()==='normal'; }
+function renderDevices(){
+  const q=$('deviceSearch').value.toLowerCase().trim();
+  const ds=state.devices.filter(d=>[val(d,'name'),val(d,'id','device_id'),val(d,'sn','SN'),val(d,'ip','IP'),val(d,'eip')].join(' ').toLowerCase().includes(q));
+  const online=state.devices.filter(d=>isOne(val(d,'online'))).length;
+  const traffic=state.devices.filter(d=>isOne(val(d,'traffic_state'))).length;
+  const lat=state.devices.map(d=>Number(val(d,'latency'))).filter(Number.isFinite);
+  $('sTotal').textContent=state.devices.length;
+  $('sOnline').textContent=online;
+  $('sOffline').textContent=state.devices.length-online;
+  $('sTraffic').textContent=traffic;
+  $('sLatency').textContent=lat.length?Math.round(lat.reduce((a,b)=>a+b,0)/lat.length)+' ms':'—';
+
+  if(!ds.length){$('deviceGrid').innerHTML='<div class="empty">Eşleşen cihaz bulunamadı.</div>';return}
+  $('deviceGrid').innerHTML=ds.map(d=>{
+    const id=val(d,'id','device_id'), on=isOne(val(d,'online')), trafficOk=isOne(val(d,'traffic_state')), storageOk=isOne(val(d,'storage_state'));
+    return `<article class="card device ${on?'':'offline'}">
+      <div class="deviceHead">
+        <div><div class="deviceName">${esc(val(d,'name','device_name')||'İsimsiz cihaz')}</div><div class="deviceId">ID: ${esc(id)} • SN: ${esc(val(d,'sn','SN'))}</div></div>
+        <span class="onlineBadge ${on?'on':'off'}">${on?'● ONLINE':'● OFFLINE'}</span>
+      </div>
+      <div class="deviceMeta">
+        <div class="meta"><div class="metak">IP</div><div class="metav" title="${esc(val(d,'ip','IP'))}">${esc(val(d,'ip','IP'))}</div></div>
+        <div class="meta"><div class="metak">EIP</div><div class="metav" title="${esc(val(d,'eip'))}">${esc(val(d,'eip'))}</div></div>
+        <div class="meta"><div class="metak">Latency</div><div class="metav">${esc(val(d,'latency'))}${val(d,'latency')!==undefined?' ms':''}</div></div>
+        <div class="meta"><div class="metak">Tunnel ID</div><div class="metav">${esc(val(d,'tunnel_id','tunnel id','tunnel'))}</div></div>
+        <div class="meta"><div class="metak">Storage</div><div class="metav">${storageOk?'Normal':'Sorun/Kota'}</div></div>
+        <div class="meta"><div class="metak">Traffic</div><div class="metav">${trafficOk?'Normal':'Sorun/Kota'}</div></div>
+      </div>
+      <div class="health"><span class="${storageOk?'good':'bad'}">Depolama ${storageOk?'✓':'!'}</span><span class="${trafficOk?'good':'bad'}">Trafik ${trafficOk?'✓':'!'}</span></div>
+      <div class="deviceActions">
+        <button class="btn primary sm" onclick="openRegisters('${esc(id)}',false)">Registerlar</button>
+        <button class="btn ghost sm" onclick="openWrite('${esc(id)}')">Register Yaz</button>
+        <button class="btn ghost sm" onclick="openDeviceAlarms('${esc(id)}',false)">Alarmlar</button>
+        <button class="btn ghost sm" onclick="openHistory('${esc(id)}')">Geçmiş</button>
+        <button class="btn ghost sm" onclick="openRegisters('${esc(id)}',true)">UTC Reg</button>
+        <button class="btn ghost sm" onclick="openDeviceAlarms('${esc(id)}',true)">UTC Alarm</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+$('connectBtn').onclick=()=>loadDevices();
+$('refreshDevices').onclick=()=>loadDevices();
+$('deviceSearch').oninput=renderDevices;
+$('refreshSelect').onchange=()=>{
+  clearInterval(state.refreshTimer); state.refreshTimer=null;
+  const sec=Number($('refreshSelect').value);
+  if(sec) state.refreshTimer=setInterval(()=>loadDevices(false),sec*1000);
 };
 
-function applyEndpoint(){
-  $('presetFields').classList.remove('hidden'); $('customFields').classList.add('hidden');
-  $('deviceField').classList.toggle('hidden', !current.device);
-  $('regField').classList.toggle('hidden', !current.reg);
-  $('bodySection').classList.toggle('hidden', !current.body);
-  const q = current.query || [];
-  $('querySection').classList.toggle('hidden', q.length === 0);
-  ['start','regs','page','limit','from','to','gap'].forEach(k=>{
-    const map = {start:'qStartWrap',regs:'qRegsWrap',page:'qPageWrap',limit:'qLimitWrap',from:'qFromWrap',to:'qToWrap',gap:'qGapWrap'};
-    $(map[k]).classList.toggle('hidden', !q.includes(k));
-  });
-  $('endpointHelp').innerHTML = `<strong>${current.title}:</strong> ${current.help}`;
-  updatePreview();
+function deviceById(id){ return state.devices.find(d=>String(val(d,'id','device_id'))===String(id)); }
+function openModal(title,tag,html){
+  $('modalTitle').textContent=title; $('modalTag').textContent=tag||''; $('modalBody').innerHTML=html; $('modalBack').classList.add('open');
 }
+function closeModal(){$('modalBack').classList.remove('open')}
+$('modalClose').onclick=closeModal;$('modalBack').onclick=e=>{if(e.target===$('modalBack'))closeModal()};
 
-function base(){
-  return $('baseUrl').value.trim().replace(/\/+$/,'');
-}
-
-function buildPresetUrl(){
-  let path = current.path;
-  if(current.device) path = path.replace('{device_id}', encodeURIComponent($('deviceId').value.trim() || '{device_id}'));
-  if(current.reg) path = path.replace('{reg_addr}', encodeURIComponent($('regAddr').value.trim() || '{reg_addr}'));
-  const vals = {
-    start:$('qStart').value.trim(), regs:$('qRegs').value.trim(), page:$('qPage').value.trim(),
-    limit:$('qLimit').value.trim(), from:$('qFrom').value.trim(), to:$('qTo').value.trim(), gap:$('qGap').value.trim()
-  };
-  const params = new URLSearchParams();
-  (current.query || []).forEach(k => { if(vals[k]) params.set(k, vals[k]); });
-  return base() + path + (params.toString() ? '?' + params.toString() : '');
-}
-
-function buildCustomUrl(){
-  const raw = $('customUrl').value.trim();
-  if(!raw) return base();
-  if(/^https?:\/\//i.test(raw)) return raw;
-  return base() + (raw.startsWith('/') ? raw : '/' + raw);
-}
-
-function currentMethod(){ return customMode ? $('customMethod').value : current.method; }
-function currentUrl(){ return customMode ? buildCustomUrl() : buildPresetUrl(); }
-
-function updatePreview(){
-  const m = currentMethod();
-  $('methodBadge').textContent = m;
-  $('methodBadge').className = 'big-method ' + m;
-  $('urlPreview').textContent = currentUrl();
-}
-
-function basicToken(user, pass){
-  // UTF-8 safe Base64
-  const bytes = new TextEncoder().encode(user + ':' + pass);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  return btoa(binary);
-}
-
-function prettyText(text){
-  if(!text) return '(boş yanıt)';
-  try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
-}
-
-function validate(){
-  if(!$('username').value.trim()) throw new Error('Kullanıcı adı boş.');
-  if(!$('password').value) throw new Error('Şifre boş.');
-  if(!customMode && current.device && !$('deviceId').value.trim()) throw new Error('device_id gerekli.');
-  if(!customMode && current.reg && !$('regAddr').value.trim()) throw new Error('reg_addr gerekli.');
-  if(!customMode && current.id === 'regshistory' && !$('qRegs').value.trim()) throw new Error('regs parametresi gerekli (örn. 2048,2050).');
-  const m = currentMethod();
-  if(['PUT','POST','PATCH'].includes(m)){
-    const txt = customMode ? $('customBody').value.trim() : $('bodyInput').value.trim();
-    if(txt){
-      try { JSON.parse(txt); } catch { throw new Error('Request body geçerli JSON değil.'); }
-    }
-  }
-}
-
-async function sendRequest(){
-  const btn = $('sendBtn');
-  const result = $('result');
-  const status = $('statusPill');
+async function openRegisters(id,v2){
+  const dev=deviceById(id); state.selectedDevice=id;
+  openModal(`${safe(val(dev,'name'))} — Registerlar`,v2?'UTC / V2':'UTC+8',`<div id="modalData"><div class="empty">Registerlar yükleniyor…</div></div>`);
   try{
-    validate();
-    btn.disabled = true; btn.textContent = 'Gönderiliyor…';
-    status.className='pill'; status.textContent='İstek gönderiliyor';
-    $('timePill').textContent='— ms';
-    result.textContent='Bekleniyor…';
-
-    const method = currentMethod();
-    const url = currentUrl();
-    const headers = {
-      'Accept':'application/json',
-      [$('authHeader').value]: 'Basic ' + basicToken($('username').value.trim(), $('password').value)
-    };
-    const options = {method, headers, mode:'cors', cache:'no-store'};
-    let bodyText = '';
-
-    if(['PUT','POST','PATCH'].includes(method)){
-      bodyText = customMode ? $('customBody').value.trim() : $('bodyInput').value.trim();
-      if(bodyText){
-        headers['Content-Type']='application/json';
-        options.body=bodyText;
-      }
-    }
-
-    $('requestDebug').textContent =
-      `${method} ${url}\n` +
-      `Accept: application/json\n` +
-      `${$('authHeader').value}: Basic [gizlendi]\n` +
-      (bodyText ? `Content-Type: application/json\n\n${prettyText(bodyText)}` : '');
-
-    const t0 = performance.now();
-    const response = await fetch(url, options);
-    const elapsed = Math.round(performance.now() - t0);
-    const text = await response.text();
-
-    $('timePill').textContent = elapsed + ' ms';
-    status.textContent = `${response.status} ${response.statusText || ''}`.trim();
-    status.className = 'pill ' + (response.ok ? 'ok' : 'err');
-
-    const headerLines = [];
-    response.headers.forEach((v,k)=>headerLines.push(`${k}: ${v}`));
-    result.textContent = prettyText(text);
-    $('requestDebug').textContent += `\n\n--- RESPONSE HEADERS ---\n${headerLines.join('\n') || '(tarayıcı tarafından görünür header yok)'}`;
-  }catch(err){
-    status.textContent = 'İstek başarısız';
-    status.className = 'pill err';
-    result.textContent =
-      `Hata: ${err.message}\n\n` +
-      `Eğer tarayıcı konsolunda "CORS", "preflight" veya "Access-Control-Allow-Origin" hatası görüyorsan, ` +
-      `sorun JavaScript kodundan değil API sunucusunun CORS politikasındandır. GitHub Pages üzerinde doğrudan çağrı için sunucunun izin vermesi gerekir.`;
-  }finally{
-    btn.disabled=false; btn.textContent='İsteği gönder';
-  }
+    const path=v2?`/v2/devices/${encodeURIComponent(id)}/regs`:`/devices/${encodeURIComponent(id)}/regs`;
+    const r=await api('GET',path); renderRegisterTable(id,r.data,v2);
+  }catch(e){$('modalData').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+function renderRegisterTable(id,payload,v2){
+  const arr=arrayFrom(payload), box=$('modalData');
+  if(!arr.length){box.innerHTML=`${objectTable(payload)}`;return}
+  const norm=arr.map(x=>({
+    addr:val(x,'addr','Addr','reg_addr','address'), value:val(x,'value','Value','reg_value'),
+    name:val(x,'name','alias_name','alias'), history:val(x,'history','History'), time:val(x,'time','reg_time','timestamp')
+  }));
+  box.innerHTML=`<div class="toolbar" style="margin-bottom:10px">
+    <button class="btn primary sm" onclick="openWrite('${esc(id)}')">Toplu Yaz</button>
+    <button class="btn ghost sm" onclick="openHistory('${esc(id)}')">Çoklu Geçmiş</button>
+    <span class="pill">${norm.length} register</span>
+  </div>
+  <div class="tableWrap"><table><thead><tr><th>Adres</th><th>Ad/Alias</th><th>Değer</th><th>History</th><th>Zaman</th><th>İşlem</th></tr></thead>
+  <tbody>${norm.map(r=>`<tr>
+    <td><code>${esc(r.addr)}</code></td><td>${esc(r.name)}</td><td><strong>${esc(r.value)}</strong></td>
+    <td>${esc(r.history)}</td><td>${esc(r.time)}</td>
+    <td><div class="tableActions">
+      <button class="btn ghost sm" onclick="openWrite('${esc(id)}','${esc(r.addr)}','${esc(r.value)}')">Yaz</button>
+      <button class="btn ghost sm" onclick="openSingleHistory('${esc(id)}','${esc(r.addr)}')">Geçmiş</button>
+      <button class="btn danger sm" onclick="deleteRegister('${esc(id)}','${esc(r.addr)}')">Sil</button>
+    </div></td></tr>`).join('')}</tbody></table></div>
+  <details style="margin-top:10px"><summary>Ham JSON</summary><pre class="json">${esc(JSON.stringify(payload,null,2))}</pre></details>`;
+}
+function openWrite(id,addr='',value=''){
+  const dev=deviceById(id);
+  openModal(`${safe(val(dev,'name'))} — Register Yaz`,'PUT',`
+    <div class="alert">Yazma isteğinin başarılı dönmesi, cihazın değeri kesin uyguladığı anlamına gelmeyebilir. İşlemden sonra panel değeri tekrar okuyarak doğrulayabilir.</div>
+    <div style="height:10px"></div>
+    <div id="writeRows" class="registerRows">
+      <div class="regRow"><input class="wAddr" placeholder="Register adresi" value="${esc(addr)}"><input class="wValue" placeholder="Değer" value="${esc(value)}"><button class="btn danger sm" onclick="this.parentElement.remove()">Sil</button></div>
+    </div>
+    <div class="toolbar" style="margin-top:10px">
+      <button class="btn ghost sm" onclick="addWriteRow()">+ Satır ekle</button>
+      <button class="btn primary" onclick="submitWrite('${esc(id)}')">PUT Gönder</button>
+    </div>
+    <div id="writeResult" style="margin-top:12px"></div>`);
+}
+function addWriteRow(){
+  const div=document.createElement('div');div.className='regRow';
+  div.innerHTML='<input class="wAddr" placeholder="Register adresi"><input class="wValue" placeholder="Değer"><button class="btn danger sm" onclick="this.parentElement.remove()">Sil</button>';
+  $('writeRows').appendChild(div);
+}
+function parseMaybeNumber(v){ const s=String(v).trim(); if(s==='')return s; const n=Number(s); return Number.isFinite(n)?n:s; }
+async function submitWrite(id){
+  const rows=[...document.querySelectorAll('#writeRows .regRow')].map(r=>({
+    addr:parseMaybeNumber(r.querySelector('.wAddr').value),value:parseMaybeNumber(r.querySelector('.wValue').value)
+  })).filter(x=>x.addr!=='');
+  if(!rows.length){toast('En az bir register adresi gir.');return}
+  try{
+    $('writeResult').innerHTML='<div class="empty">Yazma isteği gönderiliyor…</div>';
+    const wr=await api('PUT',`/devices/${encodeURIComponent(id)}/regs`,{body:rows});
+    let html=`<div class="alert" style="border-color:#28624d;background:#10251e;color:#8ce6bf">PUT tamamlandı • HTTP ${wr.status}. Şimdi değerler yeniden okunuyor…</div>`;
+    $('writeResult').innerHTML=html;
+    await new Promise(r=>setTimeout(r,900));
+    const rr=await api('GET',`/devices/${encodeURIComponent(id)}/regs`);
+    const current=arrayFrom(rr.data);
+    const checks=rows.map(w=>{
+      const found=current.find(x=>String(val(x,'addr','Addr','reg_addr','address'))===String(w.addr));
+      const now=found?val(found,'value','Value','reg_value'):undefined;
+      return {addr:w.addr,written:w.value,current:now,match:String(now)===String(w.value)};
+    });
+    $('writeResult').innerHTML+=`<div class="tableWrap" style="margin-top:10px"><table><thead><tr><th>Adres</th><th>Yazılan</th><th>Tekrar okunan</th><th>Doğrulama</th></tr></thead>
+      <tbody>${checks.map(c=>`<tr><td>${esc(c.addr)}</td><td>${esc(c.written)}</td><td>${esc(c.current)}</td><td>${c.match?'✓ Eşleşti':'⚠ Henüz eşleşmedi'}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(e){$('writeResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+async function openDeviceAlarms(id,v2){
+  const dev=deviceById(id);
+  openModal(`${safe(val(dev,'name'))} — ${v2?'UTC Alarmlar':'Alarmlar'}`,v2?'GET V2':'GET',`
+    <div class="formgrid three">
+      <div><label>From</label><input id="daFrom" placeholder="2026-08-16 00:00:00"></div>
+      <div><label>To</label><input id="daTo" placeholder="2026-08-17 00:00:00"></div>
+      <div><label>Limit</label><input id="daLimit" value="100"></div>
+    </div>
+    <div class="toolbar" style="margin:10px 0"><button class="btn primary" onclick="loadDeviceAlarms('${esc(id)}',${v2})">Getir</button></div>
+    <div id="modalData"><div class="empty">Sorgu için Getir'e bas.</div></div>`);
+}
+async function loadDeviceAlarms(id,v2){
+  try{
+    $('modalData').innerHTML='<div class="empty">Alarmlar yükleniyor…</div>';
+    const p=v2?`/v2/devices/${encodeURIComponent(id)}/alarms`:`/devices/${encodeURIComponent(id)}/alarms`;
+    const r=await api('GET',p,{query:{from:$('daFrom').value,to:$('daTo').value,limit:$('daLimit').value}});
+    $('modalData').innerHTML=objectTable(r.data)+`<details><summary>Ham JSON</summary><pre class="json">${esc(JSON.stringify(r.data,null,2))}</pre></details>`;
+  }catch(e){$('modalData').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+function openHistory(id){
+  const dev=deviceById(id);
+  openModal(`${safe(val(dev,'name'))} — Register Geçmişi`,'GET',`
+    <div class="formgrid">
+      <div><label>Register adresleri (zorunlu)</label><input id="mhRegs" placeholder="2048,2050"></div>
+      <div><label>Gap (saniye)</label><input id="mhGap" placeholder="60"></div>
+      <div><label>From (UTC)</label><input id="mhFrom" placeholder="2026-08-16 00:00:00"></div>
+      <div><label>To (UTC)</label><input id="mhTo" placeholder="2026-08-17 00:00:00"></div>
+      <div><label>Page</label><input id="mhPage" placeholder="1"></div>
+      <div><label>Limit</label><input id="mhLimit" placeholder="100"></div>
+    </div>
+    <div class="toolbar" style="margin:10px 0"><button class="btn primary" onclick="loadMultiHistory('${esc(id)}')">Geçmişi Getir</button></div>
+    <div id="modalData"><div class="empty">Register adreslerini gir.</div></div>`);
+}
+async function loadMultiHistory(id){
+  if(!$('mhRegs').value.trim()){toast('regs zorunlu. Örn: 2048,2050');return}
+  try{
+    $('modalData').innerHTML='<div class="empty">Geçmiş yükleniyor…</div>';
+    const r=await api('GET',`/devices/${encodeURIComponent(id)}/regshistory`,{query:{
+      regs:$('mhRegs').value,from:$('mhFrom').value,to:$('mhTo').value,gap:$('mhGap').value,page:$('mhPage').value,limit:$('mhLimit').value
+    }});
+    $('modalData').innerHTML=objectTable(r.data)+`<details><summary>Ham JSON</summary><pre class="json">${esc(JSON.stringify(r.data,null,2))}</pre></details>`;
+  }catch(e){$('modalData').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+function openSingleHistory(id,addr){
+  const dev=deviceById(id);
+  openModal(`${safe(val(dev,'name'))} — Reg ${addr} Geçmişi`,'GET',`
+    <div class="formgrid three">
+      <div><label>From (UTC)</label><input id="shFrom" placeholder="2026-08-16 00:00:00"></div>
+      <div><label>To (UTC)</label><input id="shTo" placeholder="2026-08-17 00:00:00"></div>
+      <div><label>Gap (saniye)</label><input id="shGap" placeholder="60"></div>
+      <div><label>Page</label><input id="shPage" placeholder="1"></div>
+      <div><label>Limit</label><input id="shLimit" placeholder="100"></div>
+    </div>
+    <div class="toolbar" style="margin:10px 0"><button class="btn primary" onclick="loadSingleHistory('${esc(id)}','${esc(addr)}')">Getir</button></div>
+    <div id="modalData"><div class="empty">Sorgu için Getir'e bas.</div></div>`);
+}
+async function loadSingleHistory(id,addr){
+  try{
+    $('modalData').innerHTML='<div class="empty">Geçmiş yükleniyor…</div>';
+    const r=await api('GET',`/devices/${encodeURIComponent(id)}/regs/${encodeURIComponent(addr)}/history`,{query:{
+      from:$('shFrom').value,to:$('shTo').value,gap:$('shGap').value,page:$('shPage').value,limit:$('shLimit').value
+    }});
+    $('modalData').innerHTML=objectTable(r.data)+`<details><summary>Ham JSON</summary><pre class="json">${esc(JSON.stringify(r.data,null,2))}</pre></details>`;
+  }catch(e){$('modalData').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+async function deleteRegister(id,addr){
+  if(!confirm(`Register ${addr} için DELETE isteği gönderilsin mi?\n\nNot: DIACloud eski V1.4 dokümanında bu endpoint'in henüz açık olmadığı belirtilmiştir.`))return;
+  try{
+    const r=await api('DELETE',`/devices/${encodeURIComponent(id)}/regs/${encodeURIComponent(addr)}`);
+    toast(`DELETE tamamlandı • HTTP ${r.status}`);
+    openRegisters(id,false);
+  }catch(e){toast(e.message,4500)}
 }
 
-$('sendBtn').onclick = sendRequest;
-$('copyUrlBtn').onclick = async () => {
+$('loadAllAlarms').onclick=async()=>{
+  try{ $('allAlarmsResult').innerHTML='<div class="empty">Yükleniyor…</div>';
+    const r=await api('GET','/alarms',{query:{from:$('aaFrom').value,to:$('aaTo').value,limit:$('aaLimit').value}});
+    renderResult('allAlarmsResult',r.data);
+  }catch(e){$('allAlarmsResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+};
+$('loadV2Alarms').onclick=async()=>{
+  try{ $('v2AlarmsResult').innerHTML='<div class="empty">Yükleniyor…</div>';
+    const r=await api('GET','/v2/alarms',{query:{from:$('v2aFrom').value,to:$('v2aTo').value,limit:$('v2aLimit').value}});
+    renderResult('v2AlarmsResult',r.data);
+  }catch(e){$('v2AlarmsResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+};
+$('loadTunnels').onclick=async()=>{
+  try{$('tunnelResult').innerHTML='<div class="empty">Yükleniyor…</div>';const r=await api('GET','/vlns');renderResult('tunnelResult',r.data)}
+  catch(e){$('tunnelResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+};
+$('sendCustom').onclick=async()=>{
+  const method=$('customMethod').value,path=$('customPath').value.trim(); if(!path){toast('URL/path gir.');return}
   try{
-    await navigator.clipboard.writeText(currentUrl());
-    $('copyUrlBtn').textContent='Kopyalandı';
-    setTimeout(()=>$('copyUrlBtn').textContent="URL'yi kopyala",1200);
-  }catch{
-    alert('Kopyalanamadı: ' + currentUrl());
-  }
+    let body=null; const txt=$('customBody').value.trim();
+    if(txt && !['GET','DELETE'].includes(method)){try{body=JSON.parse(txt)}catch{throw new Error('Body geçerli JSON değil.')}}
+    $('customResult').innerHTML='<div class="empty">Gönderiliyor…</div>';
+    const r=await api(method,path,{body});renderResult('customResult',r.data??{status:r.status});
+  }catch(e){$('customResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
 };
 
-[
-  'baseUrl','deviceId','regAddr','qStart','qRegs','qPage','qLimit','qFrom','qTo','qGap',
-  'customMethod','customUrl'
-].forEach(id => $(id).addEventListener('input', updatePreview));
-$('customMethod').addEventListener('change', updatePreview);
+$('logToggle').onclick=()=>{$('apiLog').classList.toggle('open');renderLogs()};
+$('logClose').onclick=()=>$('apiLog').classList.remove('open');
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('apiLog').classList.remove('open')}});
 
-renderEndpoints();
-applyEndpoint();
+renderLogs();
 </script>
 </body>
 </html>
